@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- High ground: up/down arrows between two floor lines -->
+  <g stroke="#c77dff" stroke-width="4" stroke-linecap="round" fill="none">
+    <path d="M10 6h44M10 58h44"/>
+    <path d="M32 14v36"/>
+  </g>
+  <path d="M32 11l-11 12h22zM32 53l-11-12h22z" fill="#c77dff" stroke="#2e0f4a" stroke-width="2" stroke-linejoin="round"/>
+</svg>

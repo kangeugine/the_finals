@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Drop-in spawn: arrow landing into a ring -->
+  <ellipse cx="32" cy="50" rx="22" ry="8" fill="none" stroke="#3cc8ff" stroke-width="4"/>
+  <ellipse cx="32" cy="50" rx="9" ry="3.2" fill="#3cc8ff"/>
+  <path d="M25 6h14v20h10L32 45 15 26h10z" fill="#3cc8ff" stroke="#0b3a4d" stroke-width="2.5" stroke-linejoin="round"/>
+</svg>

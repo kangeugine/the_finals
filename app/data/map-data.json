@@ -1,0 +1,300 @@
+{
+  "version": 1,
+  "maps": {
+    "Bernal.png": {
+      "rotation": -90,
+      "northLocked": true,
+      "gridSpacing": "auto",
+      "pois": [
+        {
+          "id": "mw8yoq0ddh3p8",
+          "type": "cashout_station",
+          "imagePos": {
+            "x": 1715.2,
+            "y": 2984.9
+          },
+          "gridPos": {
+            "x": 2984.9,
+            "y": 1715.2
+          }
+        },
+        {
+          "id": "mw8yovbbfypye",
+          "type": "cashout_station",
+          "imagePos": {
+            "x": 1569.1,
+            "y": 2155.9
+          },
+          "gridPos": {
+            "x": 2155.9,
+            "y": 1569.1
+          }
+        },
+        {
+          "id": "mw8yp2jxa6cuu",
+          "type": "cashout_station",
+          "imagePos": {
+            "x": 2636.6,
+            "y": 2932
+          },
+          "gridPos": {
+            "x": 2932,
+            "y": 2636.6
+          }
+        },
+        {
+          "id": "mw8yp5vsg514c",
+          "type": "cashout_station",
+          "imagePos": {
+            "x": 3897.5,
+            "y": 1825.9
+          },
+          "gridPos": {
+            "x": 1825.9,
+            "y": 3897.5
+          }
+        },
+        {
+          "id": "mw8ypcqlr2s4n",
+          "type": "cashout_station",
+          "imagePos": {
+            "x": 3241.5,
+            "y": 930.2
+          },
+          "gridPos": {
+            "x": 930.2,
+            "y": 3241.5
+          }
+        },
+        {
+          "id": "mw8ypnifl03ln",
+          "type": "cashout_station",
+          "imagePos": {
+            "x": 3588.1,
+            "y": 2880.4
+          },
+          "gridPos": {
+            "x": 2880.4,
+            "y": 3588.1
+          }
+        },
+        {
+          "id": "mw8z2n2hpel0x",
+          "type": "cash_box",
+          "imagePos": {
+            "x": 3447.4,
+            "y": 830.9
+          },
+          "gridPos": {
+            "x": 830.9,
+            "y": 3447.4
+          }
+        },
+        {
+          "id": "mw8z9fe4xu2k7",
+          "type": "cashout_station",
+          "imagePos": {
+            "x": 2118.2,
+            "y": 892.1
+          },
+          "gridPos": {
+            "x": 892.1,
+            "y": 2118.2
+          }
+        },
+        {
+          "id": "mw8z9sev2hhi2",
+          "type": "spawn",
+          "imagePos": {
+            "x": 2845.2,
+            "y": 375
+          },
+          "gridPos": {
+            "x": 375,
+            "y": 2845.2
+          }
+        },
+        {
+          "id": "mw8zgcdp4ho1c",
+          "type": "cash_box",
+          "imagePos": {
+            "x": 1654.2,
+            "y": 2366.6
+          },
+          "gridPos": {
+            "x": 2366.6,
+            "y": 1654.2
+          }
+        },
+        {
+          "id": "mw8zlajlpk3hg",
+          "type": "cashout_station",
+          "imagePos": {
+            "x": 3571.3,
+            "y": 781.2
+          },
+          "gridPos": {
+            "x": 781.2,
+            "y": 3571.3
+          }
+        },
+        {
+          "id": "mw8zo8ym9so86",
+          "type": "cash_box",
+          "imagePos": {
+            "x": 2267.5,
+            "y": 656.4
+          },
+          "gridPos": {
+            "x": 656.4,
+            "y": 2267.5
+          }
+        },
+        {
+          "id": "mw8zso4t6885k",
+          "type": "cashout_station",
+          "imagePos": {
+            "x": 1557,
+            "y": 2266.2
+          },
+          "gridPos": {
+            "x": 2266.2,
+            "y": 1557
+          }
+        },
+        {
+          "id": "mw901qanzhms2",
+          "type": "spawn",
+          "imagePos": {
+            "x": 1436.4,
+            "y": 1776.1
+          },
+          "gridPos": {
+            "x": 1776.1,
+            "y": 1436.4
+          }
+        },
+        {
+          "id": "mw905s43ta485",
+          "type": "spawn",
+          "imagePos": {
+            "x": 2052.3,
+            "y": 3095.5
+          },
+          "gridPos": {
+            "x": 3095.5,
+            "y": 2052.3
+          }
+        }
+      ],
+      "imageSize": {
+        "width": 5466,
+        "height": 3504
+      },
+      "gridSize": {
+        "width": 3504,
+        "height": 5466
+      },
+      "distanceRefs": [
+        {
+          "a": "mw8z9sev2hhi2",
+          "b": "mw8z9fe4xu2k7",
+          "meters": 81
+        },
+        {
+          "a": "mw905s43ta485",
+          "b": "mw8zso4t6885k",
+          "meters": 80
+        }
+      ]
+    },
+    "Fangwai City.png": {
+      "rotation": 0,
+      "northLocked": false,
+      "gridSpacing": "auto",
+      "pois": [],
+      "imageSize": {
+        "width": 5466,
+        "height": 3504
+      },
+      "gridSize": {
+        "width": 5466,
+        "height": 3504
+      }
+    },
+    "Fortune Stadium.png": {
+      "rotation": 0,
+      "northLocked": false,
+      "gridSpacing": "auto",
+      "pois": [],
+      "imageSize": {
+        "width": 5466,
+        "height": 3504
+      },
+      "gridSize": {
+        "width": 5466,
+        "height": 3504
+      }
+    },
+    "Las Vegas.png": {
+      "rotation": 0,
+      "northLocked": false,
+      "gridSpacing": "auto",
+      "pois": [],
+      "imageSize": {
+        "width": 5466,
+        "height": 3504
+      },
+      "gridSize": {
+        "width": 5466,
+        "height": 3504
+      }
+    },
+    "Nozomi:Citadel.png": {
+      "rotation": 0,
+      "northLocked": false,
+      "gridSpacing": "auto",
+      "pois": [],
+      "imageSize": {
+        "width": 5466,
+        "height": 3504
+      },
+      "gridSize": {
+        "width": 5466,
+        "height": 3504
+      }
+    },
+    "SYS$HORIZON.png": {
+      "rotation": 0,
+      "northLocked": false,
+      "gridSpacing": "auto",
+      "pois": [],
+      "imageSize": {
+        "width": 5466,
+        "height": 3504
+      },
+      "gridSize": {
+        "width": 5466,
+        "height": 3504
+      }
+    },
+    "Skyway Stadium.png": {
+      "rotation": 0,
+      "northLocked": false,
+      "gridSpacing": "auto",
+      "pois": [],
+      "imageSize": {
+        "width": 5466,
+        "height": 3504
+      },
+      "gridSize": {
+        "width": 5466,
+        "height": 3504
+      }
+    }
+  },
+  "settings": {
+    "iconSize": 39,
+    "hiddenTypes": []
+  }
+}
