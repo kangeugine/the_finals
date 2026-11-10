@@ -40,6 +40,7 @@ const state = {
   cursor: null,          // last pointer position in screen px
   drag: null,
   showGrid: true,
+  readOnly: false,       // GitHub Pages build: view only, nothing is saved
 };
 
 // ----------------------------- persistence --------------------------------
@@ -47,6 +48,7 @@ const state = {
 let saveTimer = null;
 
 function scheduleSave() {
+  if (state.readOnly) return;
   setSaveState('Unsaved…');
   clearTimeout(saveTimer);
   saveTimer = setTimeout(save, SAVE_DEBOUNCE_MS);
@@ -54,7 +56,7 @@ function scheduleSave() {
 
 async function save() {
   try {
-    const res = await fetch('/api/data', {
+    const res = await fetch('api/data', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(state.data),
@@ -521,7 +523,7 @@ async function selectMap(id) {
   state.img = null;
   render();
   try {
-    state.img = state.imgCache[id] ??= await loadImage('/images/' + encodeURIComponent(map.file));
+    state.img = state.imgCache[id] ??= await loadImage('images/' + encodeURIComponent(map.file));
   } catch (e) {
     $('loading').textContent = e.message;
     return;
@@ -654,7 +656,7 @@ function renderDistance() {
   const measuring = state.tool === 'measure';
   const { a, b } = state.measure;
   $('measure-hint').textContent = !measuring
-    ? 'Pick two POIs to measure. Enter a known distance to calibrate this map.'
+    ? 'Pick two POIs to measure.' + (state.readOnly ? '' : ' Enter a known distance to calibrate this map.')
     : !a
       ? 'Click the first POI.'
       : !b
@@ -990,13 +992,15 @@ function onKey(e) {
     if (e.key === 'Escape') selectPoi(null);
   } else if (e.key === 'm' || e.key === 'M') {
     setTool(state.tool === 'measure' ? 'select' : 'measure');
+  } else if (e.key === 'f' || e.key === 'F') {
+    fitView();
+  } else if (state.readOnly) {
+    return;
   } else if (/^[1-9]$/.test(e.key) && state.poiTypes[e.key - 1]) {
     setTool(state.poiTypes[e.key - 1].id);
   } else if (e.key === 'Delete' || e.key === 'Backspace') {
     deleteSelected();
     e.preventDefault();
-  } else if (e.key === 'f' || e.key === 'F') {
-    fitView();
   }
 }
 
@@ -1043,8 +1047,8 @@ function bindCanvas() {
       start: pos,
       last: pos,
       moved: false,
-      // What a drag moves. Nothing is draggable while measuring.
-      item: measuring ? null : hit && (hit.child || hit.poi),
+      // What a drag moves. Nothing is draggable while measuring or read-only.
+      item: measuring || state.readOnly ? null : hit && (hit.child || hit.poi),
       isChild: !!hit?.child,
       clicked: hit?.poi ?? null,
       button: e.button,
@@ -1103,7 +1107,7 @@ function bindCanvas() {
     } else if (!d.item && !d.moved && d.button === 0) {
       if (state.tool.startsWith(CHILD_TOOL_PREFIX)) placeChild(eventPos(e));
       else if (state.tool !== 'select') placePoi(eventPos(e));
-      else selectPoi(null);
+      else if (!d.clicked) selectPoi(null); // read-only clicks on a POI land here
     }
   });
 
@@ -1172,10 +1176,15 @@ function updateStatus() {
 // --------------------------------- init -----------------------------------
 
 async function init() {
-  const [config, data] = await Promise.all([
-    fetch('/api/config').then((r) => r.json()),
-    fetch('/api/data').then((r) => r.json()),
-  ]);
+  const getJson = (url) => fetch(url).then((r) => (r.ok ? r.json() : Promise.reject(new Error(url + ': ' + r.status))));
+  // Local server first; the GitHub Pages build ships static files instead.
+  const [config, data] = await Promise.all([getJson('api/config'), getJson('api/data')]).catch(() =>
+    Promise.all([getJson('config.json'), getJson('map-data.json')]),
+  );
+  state.readOnly = !!config.readOnly;
+  document.body.classList.toggle('readonly', state.readOnly);
+  for (const el of document.querySelectorAll('#sel-x, #sel-y, #sel-label')) el.disabled = state.readOnly;
+  if (state.readOnly) setSaveState('Read-only');
   state.maps = config.maps;
   state.poiTypes = config.poiTypes;
   state.secondaryTypes = config.secondaryTypes || [];

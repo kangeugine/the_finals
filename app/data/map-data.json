@@ -1,7 +1,7 @@
 {
   "version": 1,
   "maps": {
-    "Bernal.png": {
+    "Bernal.webp": {
       "rotation": -90,
       "northLocked": true,
       "gridSpacing": "auto",
@@ -16,7 +16,8 @@
           "gridPos": {
             "x": 2984.9,
             "y": 1715.2
-          }
+          },
+          "children": []
         },
         {
           "id": "mw8yovbbfypye",
@@ -28,7 +29,8 @@
           "gridPos": {
             "x": 2155.9,
             "y": 1569.1
-          }
+          },
+          "children": []
         },
         {
           "id": "mw8yp2jxa6cuu",
@@ -40,7 +42,8 @@
           "gridPos": {
             "x": 2932,
             "y": 2636.6
-          }
+          },
+          "children": []
         },
         {
           "id": "mw8yp5vsg514c",
@@ -52,7 +55,8 @@
           "gridPos": {
             "x": 1825.9,
             "y": 3897.5
-          }
+          },
+          "children": []
         },
         {
           "id": "mw8ypcqlr2s4n",
@@ -64,7 +68,8 @@
           "gridPos": {
             "x": 930.2,
             "y": 3241.5
-          }
+          },
+          "children": []
         },
         {
           "id": "mw8ypnifl03ln",
@@ -76,7 +81,8 @@
           "gridPos": {
             "x": 2880.4,
             "y": 3588.1
-          }
+          },
+          "children": []
         },
         {
           "id": "mw8z2n2hpel0x",
@@ -88,7 +94,8 @@
           "gridPos": {
             "x": 830.9,
             "y": 3447.4
-          }
+          },
+          "children": []
         },
         {
           "id": "mw8z9fe4xu2k7",
@@ -100,7 +107,8 @@
           "gridPos": {
             "x": 892.1,
             "y": 2118.2
-          }
+          },
+          "children": []
         },
         {
           "id": "mw8z9sev2hhi2",
@@ -112,7 +120,8 @@
           "gridPos": {
             "x": 375,
             "y": 2845.2
-          }
+          },
+          "children": []
         },
         {
           "id": "mw8zgcdp4ho1c",
@@ -124,7 +133,8 @@
           "gridPos": {
             "x": 2366.6,
             "y": 1654.2
-          }
+          },
+          "children": []
         },
         {
           "id": "mw8zlajlpk3hg",
@@ -136,7 +146,8 @@
           "gridPos": {
             "x": 781.2,
             "y": 3571.3
-          }
+          },
+          "children": []
         },
         {
           "id": "mw8zo8ym9so86",
@@ -148,7 +159,8 @@
           "gridPos": {
             "x": 656.4,
             "y": 2267.5
-          }
+          },
+          "children": []
         },
         {
           "id": "mw8zso4t6885k",
@@ -160,7 +172,8 @@
           "gridPos": {
             "x": 2266.2,
             "y": 1557
-          }
+          },
+          "children": []
         },
         {
           "id": "mw901qanzhms2",
@@ -172,7 +185,8 @@
           "gridPos": {
             "x": 1776.1,
             "y": 1436.4
-          }
+          },
+          "children": []
         },
         {
           "id": "mw905s43ta485",
@@ -184,7 +198,8 @@
           "gridPos": {
             "x": 3095.5,
             "y": 2052.3
-          }
+          },
+          "children": []
         }
       ],
       "imageSize": {
@@ -208,7 +223,7 @@
         }
       ]
     },
-    "Fangwai City.png": {
+    "Fangwai City.webp": {
       "rotation": 0,
       "northLocked": false,
       "gridSpacing": "auto",
@@ -222,7 +237,7 @@
         "height": 3504
       }
     },
-    "Fortune Stadium.png": {
+    "Fortune Stadium.webp": {
       "rotation": 0,
       "northLocked": false,
       "gridSpacing": "auto",
@@ -236,7 +251,7 @@
         "height": 3504
       }
     },
-    "Las Vegas.png": {
+    "Las Vegas.webp": {
       "rotation": 0,
       "northLocked": false,
       "gridSpacing": "auto",
@@ -250,7 +265,7 @@
         "height": 3504
       }
     },
-    "Nozomi:Citadel.png": {
+    "Nozomi-Citadel.webp": {
       "rotation": 0,
       "northLocked": false,
       "gridSpacing": "auto",
@@ -264,7 +279,7 @@
         "height": 3504
       }
     },
-    "SYS$HORIZON.png": {
+    "SYS-HORIZON.webp": {
       "rotation": 0,
       "northLocked": false,
       "gridSpacing": "auto",
@@ -278,7 +293,7 @@
         "height": 3504
       }
     },
-    "Skyway Stadium.png": {
+    "Skyway Stadium.webp": {
       "rotation": 0,
       "northLocked": false,
       "gridSpacing": "auto",
@@ -294,7 +309,7 @@
     }
   },
   "settings": {
-    "iconSize": 39,
+    "iconSize": 20,
     "hiddenTypes": []
   }
 }

@@ -10,7 +10,7 @@ const path = require('path');
 const PORT = Number(process.env.PORT) || 5173;
 const APP_DIR = __dirname;
 const PUBLIC_DIR = path.join(APP_DIR, 'public');
-const MAP_DIR = path.join(APP_DIR, '..', 'ape_squad_map');
+const MAP_DIR = path.join(APP_DIR, '..', 'maps', 'ape_squad_map');
 const DATA_FILE = path.join(APP_DIR, 'data', 'map-data.json');
 
 // POI palette. `icon` is an image in MAP_DIR (excluded from the map list);
@@ -29,7 +29,7 @@ const SECONDARY_TYPES = [
 const typesForClient = (types) =>
   types.map(({ icon, appIcon, ...t }) => ({
     ...t,
-    src: icon ? '/images/' + encodeURIComponent(icon) : '/icons/' + encodeURIComponent(appIcon),
+    src: icon ? 'images/' + encodeURIComponent(icon) : 'icons/' + encodeURIComponent(appIcon),
   }));
 
 const MIME = {
@@ -87,17 +87,21 @@ function listMaps() {
     .map((file) => ({ id: file, name: path.parse(file).name, file }));
 }
 
+// Also used by build-static.js, which adds `readOnly: true` for GitHub Pages.
+function buildConfig() {
+  return {
+    maps: listMaps(),
+    poiTypes: typesForClient(POI_TYPES),
+    secondaryTypes: typesForClient(SECONDARY_TYPES),
+  };
+}
+
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const pathname = decodeURIComponent(url.pathname);
 
   if (pathname === '/api/config' && req.method === 'GET') {
-    const config = {
-      maps: listMaps(),
-      poiTypes: typesForClient(POI_TYPES),
-      secondaryTypes: typesForClient(SECONDARY_TYPES),
-    };
-    return send(res, 200, JSON.stringify(config));
+    return send(res, 200, JSON.stringify(buildConfig()));
   }
 
   if (pathname === '/api/data' && req.method === 'GET') {
@@ -129,7 +133,11 @@ const server = http.createServer((req, res) => {
   return file ? sendFile(res, file) : send(res, 403, '{"error":"forbidden"}');
 });
 
-server.listen(PORT, () => {
-  console.log(`Ape Squad map tool: http://localhost:${PORT}`);
-  console.log(`Data file: ${DATA_FILE}`);
-});
+if (require.main === module) {
+  server.listen(PORT, () => {
+    console.log(`Ape Squad map tool: http://localhost:${PORT}`);
+    console.log(`Data file: ${DATA_FILE}`);
+  });
+}
+
+module.exports = { buildConfig, PUBLIC_DIR, MAP_DIR, DATA_FILE };

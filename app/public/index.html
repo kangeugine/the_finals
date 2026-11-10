@@ -13,7 +13,7 @@
       <ul id="map-list"></ul>
     </section>
 
-    <section>
+    <section class="edit-only">
       <h2>North <span id="north-state" class="pill"></span></h2>
       <p class="hint">Rotate until the map's north points up, then lock it.</p>
       <div class="row">
@@ -56,7 +56,7 @@
       <ul id="type-filters" class="filters"></ul>
     </section>
 
-    <section>
+    <section class="edit-only">
       <h2>Place POI</h2>
       <div id="tools" class="tools">
         <button class="tool active" data-tool="select" title="Select / pan (V or Esc)">
@@ -74,10 +74,10 @@
         <label>Y <input id="sel-y" type="number" step="1" /></label>
       </div>
       <label class="field">Label <input id="sel-label" type="text" placeholder="optional" /></label>
-      <button id="sel-delete" class="danger wide">Delete POI</button>
+      <button id="sel-delete" class="danger wide edit-only">Delete POI</button>
 
       <h3>Secondary icons <span class="hint">(only shown while this POI is selected)</span></h3>
-      <div id="child-tools" class="tools"></div>
+      <div id="child-tools" class="tools edit-only"></div>
       <ul id="child-list" class="dist-list"></ul>
     </section>
 
@@ -90,7 +90,7 @@
       <div id="measure-result" hidden>
         <div class="measure-pair"><span id="m-a"></span> → <span id="m-b"></span></div>
         <div class="measure-value" id="m-value"></div>
-        <div class="row">
+        <div class="row edit-only">
           <label>Known <input id="m-known" type="number" min="0" step="0.1" placeholder="metres" /> m</label>
           <button id="m-save" title="Use this pair as a reference for the map's scale">Set</button>
         </div>

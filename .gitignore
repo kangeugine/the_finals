@@ -1,0 +1,26 @@
+# macOS
+.DS_Store
+
+# Video files (recordings and VOD review clips are too large for git)
+*.mov
+*.mp4
+*.mkv
+*.avi
+*.webm
+*.m4v
+*.flv
+
+# Node (app/)
+node_modules/
+npm-debug.log*
+
+# Editor / misc
+.vscode/
+.idea/
+*.swp
+
+# Full-size source map PNGs (web app uses the WebP copies)
+maps/ape_squad_map/original/
+
+# Static GitHub Pages build (node app/build-static.js)
+_site/
