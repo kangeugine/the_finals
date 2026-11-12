@@ -9,6 +9,7 @@ for (const [id, m] of Object.entries(c)) {
   if (id === '_doc') continue;
   s += ',\n  ' + JSON.stringify(id) + ': {\n    "official": ' + JSON.stringify(m.official);
   if (m.align) s += ',\n    "align": ' + JSON.stringify(m.align);
+  if (m.drawn) s += ',\n    "drawn": {\n' + Object.entries(m.drawn).map(([n, p]) => '      ' + JSON.stringify(n) + ': ' + JSON.stringify(p)).join(',\n') + '\n    }';
   s += ',\n    "zones": {\n' + Object.entries(m.zones).map(([n, p]) => '      ' + JSON.stringify(n) + ': ' + JSON.stringify(p)).join(',\n') + '\n    }\n  }';
 }
 fs.writeFileSync(f, s + '\n}\n');

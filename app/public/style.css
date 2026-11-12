@@ -246,6 +246,19 @@ body.readonly .dist-list button { display: none; }
 #status #save-state { margin-left: auto; }
 #status button { padding: 2px 8px; font-size: 11px; }
 .save-error { color: var(--danger); }
+#repo-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font: 11px -apple-system, system-ui, sans-serif;
+  text-decoration: none;
+}
+#repo-link:hover { border-color: var(--muted); }
+#repo-link img { width: 14px; height: 14px; }
 
 .dist-list li.selected { background: rgba(245, 197, 24, .15); }
 .dist-list img { width: 18px; height: 18px; object-fit: contain; }

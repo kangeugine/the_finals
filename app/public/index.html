@@ -143,6 +143,8 @@
       <span id="zoom-level"></span>
       <button id="fit-btn" title="Fit map to screen (F)">Fit</button>
       <span id="save-state"></span>
+      <a id="repo-link" href="https://github.com/kangeugine/the_finals#contributing" target="_blank" rel="noopener"
+         title="Run the tool yourself and add your notes with a pull request"><img src="icons/github.svg" alt="" />Contribute</a>
     </footer>
   </main>
 
@@ -163,9 +165,9 @@
     <div id="vod-yt-wrap" hidden><div id="vod-yt"></div></div>
     <div class="vod-bar">
       <button data-seek="-10" title="Back 10 s (←)">« 10</button>
-      <button data-seek="-3" title="Back 3 s (⌃⌘←)">‹ 3</button>
+      <button data-seek="-3" title="Back 3 s (Shift ← or ⌃⌘←)">‹ 3</button>
       <button id="vod-play" title="Play / pause (Space)">▶</button>
-      <button data-seek="3" title="Forward 3 s (⌃⌘→)">3 ›</button>
+      <button data-seek="3" title="Forward 3 s (Shift → or ⌃⌘→)">3 ›</button>
       <button data-seek="10" title="Forward 10 s (→)">10 »</button>
       <span id="vod-time" class="mono"></span>
     </div>
@@ -201,7 +203,7 @@
     <ul id="ts-list" class="dist-list"></ul>
     <p class="hint" id="vod-file-hint"></p>
     <p class="hint">
-      <kbd>Space</kbd> play/pause · <kbd>←</kbd><kbd>→</kbd> 10 s · <kbd>⌃⌘←</kbd><kbd>⌃⌘→</kbd> 3 s
+      <kbd>Space</kbd> play/pause · <kbd>←</kbd><kbd>→</kbd> 10 s · <kbd>⇧←</kbd><kbd>⇧→</kbd> or <kbd>⌃⌘←</kbd><kbd>⌃⌘→</kbd> 3 s
       <span class="edit-only">· paused: <kbd>Enter</kbd> describe, <kbd>S</kbd> screenshot</span>
     </p>
   </aside>

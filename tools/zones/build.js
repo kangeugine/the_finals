@@ -7,6 +7,9 @@
 //   maps[id].zones = [{ name, label: {x, y}, polygons: [[[x, y], ...], ...] }]  (Ape Squad image px)
 //   maps[id].rotation = nearest 90° to north-up, northLocked = true
 // Transforms are cached in transforms.json (committed) because registration is slow.
+// A map with `drawn` outlines (from dots.js, optionally hand-edited; a zone may
+// list several rings, inner ones being holes) uses those instead: no
+// segmentation, and its rotation is left as it is.
 
 const fs = require('fs');
 const path = require('path');
@@ -39,6 +42,14 @@ for (const [id, cfg] of Object.entries(CONFIG)) {
     continue;
   }
   const t0 = Date.now();
+  if (cfg.drawn) {
+    const m = (data.maps[id] ??= { rotation: 0, northLocked: false, gridSpacing: 'auto', pois: [] });
+    // A zone is one outline [[x, y], ...] or several rings [outline, hole, ...].
+    const rings = (p) => (Array.isArray(p[0][0]) ? p : [p]);
+    m.zones = Object.entries(cfg.drawn).map(([name, p]) => ({ name, label: interiorPoint(rings(p)), polygons: rings(p) }));
+    console.log(`${id}: ${m.zones.length} hand-drawn zones`);
+    continue;
+  }
   const { im, owner, names } = segment(path.join(ROOT, 'maps', 'official', cfg.official), cfg.zones);
 
   let tf = transforms[id];
@@ -99,6 +110,37 @@ for (const [id, cfg] of Object.entries(CONFIG)) {
   m.zones = zones;
   const pts = zones.reduce((n, z) => n + z.polygons.reduce((s, p) => s + p.length, 0), 0);
   console.log(`${id}: ${zones.length} zones, ${pts} points, rotation ${m.rotation}°, ncc ${Number.isNaN(tf.ncc) ? 'manual' : tf.ncc.toFixed?.(3) ?? tf.ncc} (${Date.now() - t0} ms)`);
+}
+
+// Label spot for a drawn zone: the inside point farthest from its edges, so it
+// sits in the middle even for curved or L-shaped zones. `rings` = outline +
+// holes, inside by the even-odd rule (as the app fills them).
+function interiorPoint(rings) {
+  const all = rings.flat();
+  const xs = all.map((p) => p[0]), ys = all.map((p) => p[1]);
+  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  const inside = (x, y) => {
+    let c = false;
+    for (const poly of rings) for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const [xi, yi] = poly[i], [xj, yj] = poly[j];
+      if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c;
+    }
+    return c;
+  };
+  const edgeDist = (x, y) => Math.min(...rings.flatMap((poly) => poly.map(([ax, ay], i) => {
+    const [bx, by] = poly[(i + 1) % poly.length];
+    const t = Math.max(0, Math.min(1, ((x - ax) * (bx - ax) + (y - ay) * (by - ay)) / ((bx - ax) ** 2 + (by - ay) ** 2 || 1)));
+    return Math.hypot(x - ax - t * (bx - ax), y - ay - t * (by - ay));
+  })));
+  let best = { x: Math.round((x0 + x1) / 2), y: Math.round((y0 + y1) / 2), d: -1 };
+  const N = 60;
+  for (let i = 0; i <= N; i++) for (let j = 0; j <= N; j++) {
+    const x = x0 + ((x1 - x0) * i) / N, y = y0 + ((y1 - y0) * j) / N;
+    if (!inside(x, y)) continue;
+    const d = edgeDist(x, y);
+    if (d > best.d) best = { x: Math.round(x), y: Math.round(y), d };
+  }
+  return { x: best.x, y: best.y };
 }
 
 fs.writeFileSync(DATA, JSON.stringify(data, null, 2));

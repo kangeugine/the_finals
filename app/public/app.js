@@ -297,7 +297,7 @@ function drawZones(g, dpr) {
     }
     ctx.fillStyle = `hsla(${hue}, 85%, 55%, 0.14)`;
     ctx.strokeStyle = `hsla(${hue}, 90%, 65%, 0.9)`;
-    ctx.fill();
+    ctx.fill('evenodd'); // a ring inside another is a hole
     ctx.stroke();
   });
   ctx.restore();
@@ -1796,8 +1796,10 @@ function onVodKey(e) {
   if (e.target.matches('input, select, textarea')) return;
   const mod = e.metaKey || e.ctrlKey || e.altKey;
   if ((e.key === ' ' || e.key === 'k') && !mod) togglePlay();
-  else if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !e.shiftKey && !e.altKey) {
-    const step = e.ctrlKey && e.metaKey ? 3 : !e.ctrlKey && !e.metaKey ? 10 : 0;
+  else if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !e.altKey) {
+    // 3 s: ⌃⌘ (Mac) or Shift (anywhere; Ctrl+Win+arrow switches desktops on Windows).
+    const plain = !e.ctrlKey && !e.metaKey;
+    const step = (e.ctrlKey && e.metaKey && !e.shiftKey) || (e.shiftKey && plain) ? 3 : plain ? 10 : 0;
     if (!step) return; // leave other combos (e.g. ⌘← = back) to the browser
     seekBy(e.key === 'ArrowLeft' ? -step : step);
   } else if (state.readOnly) {
