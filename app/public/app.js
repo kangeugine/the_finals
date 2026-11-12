@@ -950,12 +950,10 @@ function renderSelected() {
     li.innerHTML = '<span class="ts"></span><span class="name"></span>';
     li.querySelector('.ts').textContent = fmtTime(ts.t, vodEntry(file)?.duration);
     li.querySelector('.name').textContent = ts.text;
-    // Hosted (read-only) site has no videos, so it goes to YouTube instead.
     const yt = youtubeUrl(file, ts.t);
     li.prepend(yt ? youtubeLink(file, ts.t) : Object.assign(document.createElement('span'), { className: 'yt-slot' }));
-    li.title = file + (!state.readOnly ? ' — click to play' : yt ? ' — click to open on YouTube' : '');
-    if (!state.readOnly) li.onclick = () => playTimestamp(file, ts);
-    else if (yt) li.onclick = () => window.open(yt, '_blank', 'noopener');
+    li.title = file + ' — click to play in VOD review';
+    li.onclick = () => playTimestamp(file, ts);
     tsList.appendChild(li);
   }
 }
@@ -1059,8 +1057,7 @@ function renderPhotos() {
       ...base,
       note: ts.text,
       yt: yt && { file: vodFile, t: ts.t, text: ts.text },
-      onClick: !state.readOnly ? () => playTimestamp(vodFile, ts)
-        : yt ? () => window.open(yt, '_blank', 'noopener') : null,
+      onClick: () => playTimestamp(vodFile, ts),
     };
   };
   const addItemPhotos = (item, base) => {
@@ -1319,10 +1316,10 @@ function onKey(e) {
     fitView();
   } else if ((e.key === 'z' || e.key === 'Z') && !$('zones-toggle').disabled) {
     setZonesVisible(settings().showZones === false);
+  } else if ((e.key === 'r' || e.key === 'R') && !e.metaKey && !e.ctrlKey && !$('vod-toggle').closest('section').hidden) {
+    toggleVodPanel(!!$('vod-panel').hidden);
   } else if (state.readOnly) {
     return;
-  } else if ((e.key === 'r' || e.key === 'R') && !e.metaKey && !e.ctrlKey) {
-    toggleVodPanel(!!$('vod-panel').hidden);
   } else if (/^[1-9]$/.test(e.key) && state.poiTypes[e.key - 1]) {
     setTool(state.poiTypes[e.key - 1].id);
   } else if (e.key === 'Delete' || e.key === 'Backspace') {
@@ -1521,7 +1518,7 @@ const vod = {
 const video = $('vod-video');
 
 // "MM:SS", or "H:MM:SS" for videos an hour or longer (YouTube's format).
-function fmtTime(t, duration = video.duration) {
+function fmtTime(t, duration = vodDuration()) {
   const s = Math.max(0, Math.floor(t || 0));
   const mmss = String(Math.floor((s % 3600) / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
   return duration >= 3600 ? Math.floor(s / 3600) + ':' + mmss : mmss;
@@ -1639,17 +1636,22 @@ async function goToLink(link) {
 // ------- panel / loading
 
 async function toggleVodPanel(open) {
-  if (state.readOnly) return;
   $('vod-panel').hidden = !open;
   $('vod-toggle').innerHTML = (open ? '🎬 Close VOD review' : '🎬 Open VOD review') + ' <kbd>R</kbd>';
   localStorage.setItem('vodOpen', open ? '1' : '');
-  if (!open) return video.pause();
+  if (!open) return vodPause();
   renderVod();
   if (!vod.files.length) await refreshVods();
 }
 
 async function refreshVods() {
-  try {
+  // The hosted site has no videos, just the reviewed VODs in map-data.json.
+  if (state.readOnly) {
+    vod.files = Object.entries(state.data.vods || {})
+      .filter(([, v]) => v.timestamps?.length)
+      .map(([file]) => ({ file, name: file.replace(/\.[^.]+$/, '') }))
+      .sort((a, b) => b.file.localeCompare(a.file));
+  } else try {
     const res = await fetch('api/vods');
     if (!res.ok) throw new Error(res.statusText);
     vod.files = await res.json();
@@ -1689,9 +1691,12 @@ function loadVod(file) {
   vod.file = file || null;
   localStorage.setItem('lastVod', file || '');
   $('vod-select').value = file || '';
-  video.removeAttribute('src');
-  if (file) video.src = 'vods/' + encodeURIComponent(file);
-  video.load();
+  if (state.readOnly) ytLoad(file);
+  else {
+    video.removeAttribute('src');
+    if (file) video.src = 'vods/' + encodeURIComponent(file);
+    video.load();
+  }
 
   if (file) {
     // The VOD's map: the one it was reviewed on, else a map named in the file name.
@@ -1713,6 +1718,7 @@ function loadVod(file) {
 }
 
 function vodMapChanged(id) {
+  if (state.readOnly) return;
   const entry = vod.file && vodEntry(vod.file);
   if (entry && entry.map !== id) {
     entry.map = id;
@@ -1721,13 +1727,67 @@ function vodMapChanged(id) {
 }
 
 // ------- playback
+// Locally the <video> plays the file from vod_review/. The read-only site plays
+// the VOD's YouTube upload in an embedded player (IFrame API) instead.
+
+const ytEmbed = { player: null, ready: false, id: null, pending: null }; // pending: seek before the player is ready
+
+let ytApi = null;
+const loadYtApi = () =>
+  (ytApi ??= new Promise((resolve) => {
+    window.onYouTubeIframeAPIReady = () => resolve(window.YT);
+    const s = document.createElement('script');
+    s.src = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(s);
+  }));
+
+async function ytLoad(file) {
+  const id = file ? youtubeId(vodEntry(file)?.youtube || '') : null;
+  $('vod-yt-wrap').hidden = !id;
+  if (!id) {
+    ytEmbed.id = null;
+    if (ytEmbed.ready) ytEmbed.player.stopVideo();
+    return renderVodTime();
+  }
+  if (id === ytEmbed.id) return;
+  ytEmbed.id = id;
+  if (ytEmbed.player) {
+    if (ytEmbed.ready) ytEmbed.player.cueVideoById(id);
+    return;
+  }
+  const YT = await loadYtApi();
+  ytEmbed.player = new YT.Player('vod-yt', {
+    videoId: id,
+    playerVars: { rel: 0, playsinline: 1 },
+    events: {
+      onReady: () => {
+        ytEmbed.ready = true;
+        if (ytEmbed.player.getVideoData().video_id !== ytEmbed.id) ytEmbed.player.cueVideoById(ytEmbed.id); // switched while loading
+        if (ytEmbed.pending != null) ytEmbed.player.seekTo(ytEmbed.pending, true);
+        ytEmbed.pending = null;
+        renderVodTime();
+      },
+      onStateChange: renderVodTime,
+    },
+  });
+}
+
+const vodTime = () => (state.readOnly ? (ytEmbed.ready ? ytEmbed.player.getCurrentTime() : ytEmbed.pending ?? 0) : video.currentTime);
+const vodDuration = () => (state.readOnly ? (ytEmbed.ready && ytEmbed.player.getDuration()) || vodEntry(vod.file)?.duration : video.duration);
+// YouTube states 1 = playing, 3 = buffering.
+const vodPaused = () => (state.readOnly ? !(ytEmbed.ready && [1, 3].includes(ytEmbed.player.getPlayerState())) : video.paused);
+const vodPlay = () => (state.readOnly ? ytEmbed.ready && ytEmbed.player.playVideo() : video.play().catch(() => {}));
+const vodPause = () => (state.readOnly ? ytEmbed.ready && ytEmbed.player.pauseVideo() : video.pause());
 
 const seekTo = (t) => {
-  if (video.readyState === 0) video.addEventListener('loadedmetadata', () => seekTo(t), { once: true });
+  if (state.readOnly) {
+    if (ytEmbed.ready) ytEmbed.player.seekTo(Math.max(t, 0), true);
+    else ytEmbed.pending = t;
+  } else if (video.readyState === 0) video.addEventListener('loadedmetadata', () => seekTo(t), { once: true });
   else video.currentTime = Math.min(Math.max(t, 0), video.duration || t);
 };
-const seekBy = (dt) => seekTo(video.currentTime + dt);
-const togglePlay = () => (video.paused ? video.play().catch(() => {}) : video.pause());
+const seekBy = (dt) => seekTo(vodTime() + dt);
+const togglePlay = () => (vodPaused() ? vodPlay() : vodPause());
 
 // Space / ←→ / ⌃⌘←→ / Enter / S. Capture phase so the native <video> controls
 // don't also handle the arrows.
@@ -1740,6 +1800,8 @@ function onVodKey(e) {
     const step = e.ctrlKey && e.metaKey ? 3 : !e.ctrlKey && !e.metaKey ? 10 : 0;
     if (!step) return; // leave other combos (e.g. ⌘← = back) to the browser
     seekBy(e.key === 'ArrowLeft' ? -step : step);
+  } else if (state.readOnly) {
+    return;
   } else if (e.key === 'Enter' && !mod && video.paused) {
     ensureDraft();
     $('draft-text').focus();
@@ -1773,6 +1835,13 @@ function stopLinkNext() {
 }
 
 function editTimestamp(ts) {
+  if (state.readOnly) {
+    // Hosted site: nothing to edit, just play from here and show the icon.
+    seekTo(ts.t);
+    vodPlay();
+    if (ts.link) goToLink(ts.link);
+    return;
+  }
   if (vod.draft?.editing === ts) return seekTo(ts.t);
   if (!okToDiscard()) return;
   discardDraft();
@@ -1784,7 +1853,6 @@ function editTimestamp(ts) {
 }
 
 async function playTimestamp(file, ts) {
-  if (state.readOnly) return;
   await toggleVodPanel(true);
   if (!vod.files.some((f) => f.file === file)) await refreshVods();
   if (!vod.files.some((f) => f.file === file)) return setSaveState('Video not in vod_review/: ' + file, true);
@@ -1863,8 +1931,9 @@ function renderVod() {
   const yt = vod.file && youtubeUrl(vod.file);
   $('vod-youtube-open').hidden = !yt;
   if (yt) $('vod-youtube-open').href = yt;
-  $('vod-file-hint').textContent = vod.file
-    ? `Saved to vod_review/${vod.file.replace(/\.[^.]+$/, '')}.txt`
+  $('vod-file-hint').textContent = state.readOnly
+    ? vod.file && !yt ? 'No YouTube link for this VOD.' : vod.files.length ? '' : 'No reviewed VODs yet.'
+    : vod.file ? `Saved to vod_review/${vod.file.replace(/\.[^.]+$/, '')}.txt`
     : vod.files.length ? '' : 'No videos in vod_review/.';
   renderVodTime();
   renderTsList();
@@ -1872,8 +1941,9 @@ function renderVod() {
 }
 
 function renderVodTime() {
-  $('vod-play').textContent = video.paused ? '▶' : '❚❚';
-  $('vod-time').textContent = vod.file && video.readyState ? `${fmtTime(video.currentTime)} / ${fmtTime(video.duration)}` : '';
+  $('vod-play').textContent = vodPaused() ? '▶' : '❚❚';
+  const loaded = vod.file && (state.readOnly ? ytEmbed.ready && ytEmbed.id : video.readyState);
+  $('vod-time').textContent = loaded ? `${fmtTime(vodTime())} / ${fmtTime(vodDuration())}` : '';
   if (vod.draft) $('draft-time').textContent = fmtTime(vod.draft.t);
   markCurrentTs();
 }
@@ -1920,7 +1990,7 @@ function renderTsList() {
 
 // Highlight the timestamp the playhead is in, without rebuilding the list.
 function markCurrentTs() {
-  const now = video.currentTime + 0.25;
+  const now = vodTime() + 0.25;
   const lis = [...$('ts-list').children];
   const current = lis.findLast((li) => Number(li.dataset.t) <= now);
   for (const li of lis) li.classList.toggle('current', li === current);
@@ -2091,7 +2161,10 @@ function initVod() {
     window.addEventListener('pointerup', up);
   });
 
-  if (localStorage.getItem('vodOpen') && !state.readOnly) toggleVodPanel(true);
+  // Hosted site: only offer VOD review once there are reviewed VODs.
+  if (state.readOnly) $('vod-toggle').closest('section').hidden = !Object.values(state.data.vods || {}).some((v) => v.timestamps?.length);
+  if (state.readOnly) setInterval(() => !$('vod-panel').hidden && ytEmbed.ready && renderVodTime(), 500);
+  if (localStorage.getItem('vodOpen') && !$('vod-toggle').closest('section').hidden) toggleVodPanel(true);
 }
 
 // --------------------------------- init -----------------------------------

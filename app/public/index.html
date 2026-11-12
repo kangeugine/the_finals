@@ -13,9 +13,9 @@
       <ul id="map-list"></ul>
     </section>
 
-    <section class="edit-only">
+    <section>
       <h2>VOD review</h2>
-      <button id="vod-toggle" class="wide" title="Play a video from vod_review/ and record timestamps (R)">🎬 Open VOD review <kbd>R</kbd></button>
+      <button id="vod-toggle" class="wide" title="Watch a VOD and its timestamps (R)">🎬 Open VOD review <kbd>R</kbd></button>
     </section>
 
     <section class="edit-only">
@@ -152,14 +152,15 @@
     <div id="vod-resizer" title="Drag to resize"></div>
     <div class="vod-head">
       <select id="vod-select"></select>
-      <button id="vod-refresh" title="Rescan vod_review/">↻</button>
+      <button id="vod-refresh" class="edit-only" title="Rescan vod_review/">↻</button>
       <button id="vod-close" title="Close (R)">×</button>
     </div>
     <div class="vod-head">
-      <input id="vod-youtube" type="url" placeholder="YouTube link for this video (optional)" />
+      <input id="vod-youtube" class="edit-only" type="url" placeholder="YouTube link for this video (optional)" />
       <a id="vod-youtube-open" class="yt" target="_blank" rel="noopener" title="Open on YouTube" hidden><img src="icons/youtube.png" alt="" /> YouTube</a>
     </div>
-    <video id="vod-video" controls preload="metadata"></video>
+    <video id="vod-video" class="edit-only" controls preload="metadata"></video>
+    <div id="vod-yt-wrap" hidden><div id="vod-yt"></div></div>
     <div class="vod-bar">
       <button data-seek="-10" title="Back 10 s (←)">« 10</button>
       <button data-seek="-3" title="Back 3 s (⌃⌘←)">‹ 3</button>
@@ -200,8 +201,8 @@
     <ul id="ts-list" class="dist-list"></ul>
     <p class="hint" id="vod-file-hint"></p>
     <p class="hint">
-      <kbd>Space</kbd> play/pause · <kbd>←</kbd><kbd>→</kbd> 10 s · <kbd>⌃⌘←</kbd><kbd>⌃⌘→</kbd> 3 s ·
-      paused: <kbd>Enter</kbd> describe, <kbd>S</kbd> screenshot
+      <kbd>Space</kbd> play/pause · <kbd>←</kbd><kbd>→</kbd> 10 s · <kbd>⌃⌘←</kbd><kbd>⌃⌘→</kbd> 3 s
+      <span class="edit-only">· paused: <kbd>Enter</kbd> describe, <kbd>S</kbd> screenshot</span>
     </p>
   </aside>
 
