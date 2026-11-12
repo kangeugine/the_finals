@@ -1,0 +1,243 @@
+{
+  "map": "Skyway Stadium.webp",
+  "screen": {
+    "k": 0.2949,
+    "sx0": -244.9,
+    "sy0": 1068
+  },
+  "groups": {
+    "Arc (Residential + Estate + Market)": [
+      "Residential District",
+      "Estate",
+      "Market District"
+    ]
+  },
+  "tps": [
+    "Arc (Residential + Estate + Market)",
+    "Business Office",
+    "Construction"
+  ],
+  "pairs": [
+    {
+      "zone": "Business Office",
+      "from": [
+        806,
+        47
+      ],
+      "to": [
+        806,
+        63
+      ]
+    },
+    {
+      "zone": "Business Office",
+      "from": [
+        829,
+        188
+      ],
+      "to": [
+        832,
+        176
+      ]
+    },
+    {
+      "zone": "Business Office",
+      "from": [
+        438,
+        214
+      ],
+      "to": [
+        407,
+        200
+      ]
+    },
+    {
+      "zone": "Business Office",
+      "from": [
+        450,
+        284
+      ],
+      "to": [
+        416,
+        284
+      ]
+    },
+    {
+      "zone": "Business Office",
+      "from": [
+        608,
+        275
+      ],
+      "to": [
+        582,
+        287
+      ]
+    },
+    {
+      "zone": "Business Office",
+      "from": [
+        598,
+        313
+      ],
+      "to": [
+        567,
+        332
+      ]
+    },
+    {
+      "zone": "Business Office",
+      "from": [
+        697,
+        275
+      ],
+      "to": [
+        655,
+        288
+      ]
+    },
+    {
+      "zone": "Open Office",
+      "from": [
+        323,
+        258
+      ],
+      "to": [
+        321,
+        275
+      ]
+    },
+    {
+      "zone": "Open Office",
+      "from": [
+        93,
+        559
+      ],
+      "to": [
+        77,
+        559
+      ]
+    },
+    {
+      "zone": "Open Office",
+      "from": [
+        233,
+        586
+      ],
+      "to": [
+        179,
+        578
+      ]
+    },
+    {
+      "zone": "Construction",
+      "from": [
+        927,
+        334
+      ],
+      "to": [
+        948,
+        326
+      ]
+    },
+    {
+      "zone": "Construction",
+      "from": [
+        843,
+        481
+      ],
+      "to": [
+        833,
+        476
+      ]
+    },
+    {
+      "zone": "Construction",
+      "from": [
+        1004,
+        605
+      ],
+      "to": [
+        1021,
+        608
+      ]
+    },
+    {
+      "zone": "Construction",
+      "from": [
+        949,
+        649
+      ],
+      "to": [
+        955,
+        637
+      ]
+    },
+    {
+      "zone": "Residential District",
+      "from": [
+        430,
+        452
+      ],
+      "to": [
+        447,
+        433
+      ]
+    },
+    {
+      "zone": "Residential District",
+      "from": [
+        787,
+        638
+      ],
+      "to": [
+        834,
+        608
+      ]
+    },
+    {
+      "zone": "Estate",
+      "from": [
+        88,
+        618
+      ],
+      "to": [
+        121,
+        632
+      ]
+    },
+    {
+      "zone": "Market District",
+      "from": [
+        956,
+        678
+      ],
+      "to": [
+        1059,
+        694
+      ]
+    },
+    {
+      "zone": "Market District",
+      "from": [
+        946,
+        870
+      ],
+      "to": [
+        976,
+        868
+      ]
+    },
+    {
+      "zone": "Market District",
+      "from": [
+        699,
+        1149
+      ],
+      "to": [
+        620,
+        1018
+      ]
+    }
+  ],
+  "_note": "Open Office uses a per-axis fit: with only 3 points a smooth warp skews it."
+}

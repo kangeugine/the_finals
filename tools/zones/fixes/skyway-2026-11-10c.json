@@ -1,0 +1,26 @@
+{
+  "map": "Skyway Stadium.webp",
+  "_note": "Residential top edge: 6 red / 4 blue dots were ambiguous; only the three clear pairs are used.",
+  "screen": { "k": 0.2517, "sx0": -169.7, "sy0": 916 },
+  "groups": { "Arc (Residential + Estate + Market)": ["Residential District", "Estate", "Market District"] },
+  "tps": ["Arc (Residential + Estate + Market)"],
+  "pairs": [
+    { "zone": "Business Office", "from": [395, 45], "to": [385, 73] },
+    { "zone": "Business Office", "from": [741, 201], "to": [750, 212] },
+    { "zone": "Business Office", "from": [752, 247], "to": [765, 262] },
+    { "zone": "Business Office", "from": [735, 262], "to": [746, 277] },
+    { "zone": "Open Office", "from": [118, 239], "to": [132, 233] },
+    { "zone": "Open Office", "from": [298, 240], "to": [313, 240] },
+    { "zone": "Open Office", "from": [296, 451], "to": [313, 438] },
+    { "zone": "Open Office", "from": [96, 480], "to": [108, 480] },
+    { "zone": "Residential District", "from": [561, 335], "to": [522, 345] },
+    { "zone": "Residential District", "from": [672, 356], "to": [657, 352] },
+    { "zone": "Residential District", "from": [780, 370], "to": [750, 369] },
+    { "zone": "Estate", "from": [338, 474], "to": [350, 499] },
+    { "zone": "Estate", "from": [308, 510], "to": [302, 543] },
+    { "zone": "Estate", "from": [125, 709], "to": [158, 705] },
+    { "zone": "Estate", "from": [346, 851], "to": [341, 868] },
+    { "zone": "Market District", "from": [533, 632], "to": [548, 647] },
+    { "zone": "Market District", "from": [853, 768], "to": [835, 780] }
+  ]
+}

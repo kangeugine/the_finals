@@ -5,7 +5,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { buildConfig, PUBLIC_DIR, MAP_DIR, DATA_FILE } = require('./server');
+const { buildConfig, PUBLIC_DIR, MAP_DIR, DATA_FILE, PHOTO_DIR } = require('./server');
 
 const OUT = path.resolve(process.argv[2] || path.join(__dirname, '..', '_site'));
 
@@ -24,5 +24,6 @@ for (const file of images) fs.copyFileSync(path.join(MAP_DIR, file), path.join(O
 
 fs.writeFileSync(path.join(OUT, 'config.json'), JSON.stringify(config));
 fs.copyFileSync(DATA_FILE, path.join(OUT, 'map-data.json'));
+if (fs.existsSync(PHOTO_DIR)) fs.cpSync(PHOTO_DIR, path.join(OUT, 'photos'), { recursive: true });
 
 console.log(`Built ${config.maps.length} maps, ${images.length} images -> ${OUT}`);

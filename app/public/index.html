@@ -14,6 +14,11 @@
     </section>
 
     <section class="edit-only">
+      <h2>VOD review</h2>
+      <button id="vod-toggle" class="wide" title="Play a video from vod_review/ and record timestamps (R)">🎬 Open VOD review <kbd>R</kbd></button>
+    </section>
+
+    <section class="edit-only">
       <h2>North <span id="north-state" class="pill"></span></h2>
       <p class="hint">Rotate until the map's north points up, then lock it.</p>
       <div class="row">
@@ -49,6 +54,9 @@
     <section>
       <h2>Display</h2>
       <div class="row">
+        <label title="Toggle zones (Z)"><input id="zones-toggle" type="checkbox" checked /> Show zones <kbd>Z</kbd></label>
+      </div>
+      <div class="row">
         <span>Icon size</span>
         <input id="icon-size" type="range" min="16" max="80" step="1" />
         <span id="icon-size-val" class="mono"></span>
@@ -74,11 +82,17 @@
         <label>Y <input id="sel-y" type="number" step="1" /></label>
       </div>
       <label class="field">Label <input id="sel-label" type="text" placeholder="optional" /></label>
+      <label class="field" id="sel-text-field" hidden><span id="sel-text-label"></span> <textarea id="sel-text" rows="3"></textarea></label>
       <button id="sel-delete" class="danger wide edit-only">Delete POI</button>
 
       <h3>Secondary icons <span class="hint">(only shown while this POI is selected)</span></h3>
       <div id="child-tools" class="tools edit-only"></div>
       <ul id="child-list" class="dist-list"></ul>
+
+      <div id="sel-ts" hidden>
+        <h3>VOD timestamps</h3>
+        <ul id="sel-ts-list" class="dist-list"></ul>
+      </div>
     </section>
 
     <section>
@@ -113,6 +127,17 @@
       <span>N</span>
     </div>
     <div id="loading" hidden>Loading…</div>
+    <!-- Photos of the selected POI and its secondary icons. Uploads go to the
+         selected item (the POI, or the selected secondary icon). -->
+    <div id="photo-strip" hidden>
+      <label id="photo-upload" class="photo-tile upload edit-only" title="Drop photos here, or click to choose">
+        <input id="photo-input" type="file" accept="image/*" multiple hidden />
+        <span class="plus">＋</span>
+        <span id="photo-target" class="photo-target"></span>
+      </label>
+      <div id="photo-list"></div>
+    </div>
+    <div id="lightbox" hidden><img id="lightbox-img" alt="" /></div>
     <footer id="status">
       <span id="cursor-pos">—</span>
       <span id="zoom-level"></span>
@@ -120,6 +145,65 @@
       <span id="save-state"></span>
     </footer>
   </main>
+
+  <!-- VOD review: video player + YouTube-style timestamps, each optionally linked
+       to a POI / secondary icon on the map. -->
+  <aside id="vod-panel" hidden>
+    <div id="vod-resizer" title="Drag to resize"></div>
+    <div class="vod-head">
+      <select id="vod-select"></select>
+      <button id="vod-refresh" title="Rescan vod_review/">↻</button>
+      <button id="vod-close" title="Close (R)">×</button>
+    </div>
+    <div class="vod-head">
+      <input id="vod-youtube" type="url" placeholder="YouTube link for this video (optional)" />
+      <a id="vod-youtube-open" class="yt" target="_blank" rel="noopener" title="Open on YouTube" hidden><img src="icons/youtube.png" alt="" /> YouTube</a>
+    </div>
+    <video id="vod-video" controls preload="metadata"></video>
+    <div class="vod-bar">
+      <button data-seek="-10" title="Back 10 s (←)">« 10</button>
+      <button data-seek="-3" title="Back 3 s (⌃⌘←)">‹ 3</button>
+      <button id="vod-play" title="Play / pause (Space)">▶</button>
+      <button data-seek="3" title="Forward 3 s (⌃⌘→)">3 ›</button>
+      <button data-seek="10" title="Forward 10 s (→)">10 »</button>
+      <span id="vod-time" class="mono"></span>
+    </div>
+
+    <div id="vod-draft" hidden>
+      <div class="row">
+        <button id="draft-time" class="ts" title="Seek to this time"></button>
+        <input id="draft-text" type="text" placeholder="Description — Enter to save" />
+      </div>
+      <div class="row">
+        <span class="draft-label">Icon</span>
+        <span id="draft-link"></span>
+        <button id="draft-link-selected" title="Link the icon selected on the map">Use selected</button>
+        <button id="draft-unlink" title="Remove link">×</button>
+      </div>
+      <div class="row">
+        <span class="draft-label">New</span>
+        <div id="draft-new" class="new-icons"></div>
+      </div>
+      <div class="row">
+        <button id="draft-shot" title="Save the current frame as a photo (S)">📷 Screenshot <kbd>S</kbd></button>
+        <div id="draft-photos" class="draft-photos"></div>
+      </div>
+      <div class="row">
+        <button id="draft-save" class="primary">Add timestamp</button>
+        <button id="draft-retime" title="Move this timestamp to the video's current time">Use current time</button>
+        <button id="draft-cancel">Cancel</button>
+      </div>
+      <p id="draft-hint" class="hint"></p>
+    </div>
+
+    <h2 class="vod-ts-head">Timestamps <span id="ts-count" class="pill"></span></h2>
+    <ul id="ts-list" class="dist-list"></ul>
+    <p class="hint" id="vod-file-hint"></p>
+    <p class="hint">
+      <kbd>Space</kbd> play/pause · <kbd>←</kbd><kbd>→</kbd> 10 s · <kbd>⌃⌘←</kbd><kbd>⌃⌘→</kbd> 3 s ·
+      paused: <kbd>Enter</kbd> describe, <kbd>S</kbd> screenshot
+    </p>
+  </aside>
 
   <script src="app.js"></script>
 </body>

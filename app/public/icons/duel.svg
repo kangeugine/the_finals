@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- 1v1 duel: two crossed swords -->
+  <g stroke="#2e0f0f" stroke-width="2" stroke-linejoin="round" fill="#ff5c5c">
+    <path d="M8 6l6 0 32 32-6 6L8 12z"/>
+    <path d="M56 6l-6 0-32 32 6 6L56 12z"/>
+  </g>
+  <g stroke="#ff5c5c" stroke-width="5" stroke-linecap="round">
+    <path d="M14 42l10 10M50 42l-10 10"/>
+    <path d="M10 56l6-6M54 56l-6-6"/>
+  </g>
+</svg>

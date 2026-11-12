@@ -1,0 +1,152 @@
+{
+  "_doc": "Zone names + seed points (official overview px) per Ape Squad map. Seeds are the label positions on the official map; a zone can list several. Optional align = registration hints (see register.js). Built by tools/zones/build.js.",
+  "Bernal.webp": {
+    "official": "Bernal_Overview.png",
+    "align": {"theta":90,"lockTheta":true,"scale":1.6295,"anchor":[[1024,1024],[2682,1791]],"window":0.05},
+    "zones": {
+      "Chapel": [[1004,473]],
+      "Hotels [ISEUL-T]": [[1571,531]],
+      "Apartments": [[432,617]],
+      "Small Park [DISSUN]": [[216,977]],
+      "Industrial": [[1593,986]],
+      "Town Center": [[1125,1067]],
+      "Shopping District": [[698,1202]],
+      "Backyards": [[513,1481]],
+      "Theater": [[1638,1562]],
+      "Residential [VAIIYA]": [[1211,1575]]
+    }
+  },
+  "Las Vegas.webp": {
+    "official": "Atsuhiro_Las-Vegas_Overview-MAp.png",
+    "align": {"matrix":[0,-1.395,4743.49115,1.78501,0,-517.37151],"warp":{"u":[[1437,1337],[2998,2998],[4273,4484]],"v":[[2066,2066],[3078,2708],[3418,3078],[3855,3500]]},"note":"Hand-fitted to user-marked points (2026-11-10). warp = piecewise-linear per-axis correction [from, to] in Ape image px"},
+    "zones": {
+      "Parking": [[1716,494]],
+      "Zaraby District": [[839,943]],
+      "Eastwood District": [[1879,940]],
+      "Stage": [[1333,1079]],
+      "Fremont Street": [[1378,1378]],
+      "Argon District": [[832,1892]],
+      "Glamor District": [[1879,1885]]
+    }
+  },
+  "Skyway Stadium.webp": {
+    "official": "Atsuhiro_Skyway-Stadium_Overview-Map.png",
+    "align": {"theta":180,"lockTheta":true,"scale":1.5558,"anchor":[[1375.5,1323],[2697,1843]],"window":0.05,"zoneFix":{"Business Office":[{"u":[1,-51],"v":[1,9.3]},{"tps":{"src":[[1902,3462],[1824,2984],[3150,2896],[3110,2659],[2574,2689],[2608,2560],[2272,2689]],"dst":[[1902,3408],[1814,3025],[3255,2943],[3225,2659],[2662,2648],[2713,2496],[2414,2645]]}},{"u":[1.0605,-155.2],"v":[0.9352,118.8]}],"Open Office":[{"u":[0.9403,202.3],"v":[1.0577,-262.6]},{"u":[1.032,-43.5],"v":[0.932,128.3]},{"u":[1.0162,-122.4],"v":[0.9884,44.9]}],"Construction":[{"u":[1,-41.7],"v":[1.1129,-311.3]},{"tps":{"src":[[1492,2489],[1777,1991],[1231,1570],[1418,1421]],"dst":[[1421,2516],[1811,2007],[1173,1560],[1397,1462]]}}],"Residential District":[{"u":[0.9245,308.5],"v":[1.103,-335.3]},{"tps":{"src":[[3177,2089],[1967,1458],[4337,1526],[1394,1322],[1428,671],[2265,-275]],"dst":[[3120,2153],[1807,1560],[4225,1478],[1045,1268],[1326,678],[2533,170]]}},{"tps":{"src":[[2563,2308],[2122,2225],[1693,2169],[3449,1756],[3568,1613],[4295,822],[3417,258],[2674,1128],[1403,588]],"dst":[[2718,2269],[2182,2241],[1812,2173],[3401,1657],[3592,1482],[4164,838],[3437,191],[2615,1069],[1474,540]]}}],"Estate":[{"u":[0.9245,308.5],"v":[1.103,-335.3]},{"tps":{"src":[[3177,2089],[1967,1458],[4337,1526],[1394,1322],[1428,671],[2265,-275]],"dst":[[3120,2153],[1807,1560],[4225,1478],[1045,1268],[1326,678],[2533,170]]}},{"tps":{"src":[[2563,2308],[2122,2225],[1693,2169],[3449,1756],[3568,1613],[4295,822],[3417,258],[2674,1128],[1403,588]],"dst":[[2718,2269],[2182,2241],[1812,2173],[3401,1657],[3592,1482],[4164,838],[3437,191],[2615,1069],[1474,540]]}}],"Market District":[{"u":[0.9245,308.5],"v":[1.103,-335.3]},{"tps":{"src":[[3177,2089],[1967,1458],[4337,1526],[1394,1322],[1428,671],[2265,-275]],"dst":[[3120,2153],[1807,1560],[4225,1478],[1045,1268],[1326,678],[2533,170]]}},{"tps":{"src":[[2563,2308],[2122,2225],[1693,2169],[3449,1756],[3568,1613],[4295,822],[3417,258],[2674,1128],[1403,588]],"dst":[[2718,2269],[2182,2241],[1812,2173],[3401,1657],[3592,1482],[4164,838],[3437,191],[2615,1069],[1474,540]]}}]}},
+    "zones": {
+      "Business Office": [[1261,540]],
+      "Open Office": [[475,943]],
+      "Construction": [[2152,1235]],
+      "Residential District": [[1547,1365]],
+      "Market District": [[1983,1920]],
+      "Estate": [[930,1970],[700,1700],[1100,1900],[1300,2200]]
+    }
+  },
+  "Fortune Stadium.webp": {
+    "official": "Fortune_Stadium.jpg",
+    "align": {"theta":270,"lockTheta":true,"scale":2.765,"anchor":[[1024,1024],[2869,1900]],"window":0.05},
+    "zones": {
+      "Sector 1": [[1062,1121]],
+      "Sector 2": [[1512,977]],
+      "Sector 3": [[1125,1490]],
+      "Sector 4": [[720,1220]],
+      "Sector 5": [[1062,761]],
+      "Sector 6": [[1062,338]]
+    }
+  },
+  "Galaxy Estates.webp": {
+    "official": "Galaxy_Estates_Map_Overview.png",
+    "align": {"theta":0,"lockTheta":true,"scale":1.8281,"anchor":[[1024,1024],[3040,1561]],"window":0.05},
+    "zones": {
+      "Cosmo Physique": [[1031,396]],
+      "Astral Port": [[423,1022]],
+      "Eden Dome": [[1026,1022]],
+      "Orbit Homes": [[1557,936]],
+      "Nova Villas": [[976,1698]]
+    }
+  },
+  "Kyoto.webp": {
+    "official": "Kyoto.png",
+    "align": {"theta":45,"scale":0.563,"freeRotation":true},
+    "zones": {
+      "Hillside": [[1152,365]],
+      "Pavilion": [[644,536]],
+      "Admin": [[1026,576]],
+      "Bamboo Forest": [[1431,567]],
+      "Cliffside": [[1449,756]],
+      "Residential": [[788,851]],
+      "Training Quarters": [[423,878]],
+      "Temples": [[1008,999]],
+      "Guest House": [[482,1143]],
+      "Villa Compound": [[1278,1274]],
+      "Entrance": [[666,1409]]
+    }
+  },
+  "Monaco.webp": {
+    "official": "MonacoOverview_Hi-Res.jpg",
+    "align": {"theta":-6.7,"scale":1.6037,"anchor":[[1375.5,1323],[2533,1392]],"window":0.05},
+    "zones": {
+      "Forest": [[1333,722]],
+      "Royal Plaza": [[442,988]],
+      "Residential District": [[1755,1144]],
+      "Pocket Park": [[2301,1157]],
+      "Shopping District": [[1008,1196]],
+      "Construction": [[1781,1502]],
+      "Hotels": [[683,1502]],
+      "Cathedral": [[1430,1632]],
+      "Villas": [[1898,1736]],
+      "Park": [[2022,2080]],
+      "Cliffside": [[1196,2145]]
+    }
+  },
+  "Nozomi-Citadel.webp": {
+    "official": "NozomiCitadel_Overview.png",
+    "align": {"theta":270,"lockTheta":true,"scale":2.17,"anchor":[[1024,1024],[2766,1538]],"window":0.05},
+    "zones": {
+      "Research Facility": [[792,531]],
+      "Operations Center": [[1593,900]],
+      "Connection Center": [[603,1035]],
+      "Administration": [[1044,1035]],
+      "Bathhouse": [[594,1260]],
+      "Mall": [[1031,1260]],
+      "Cybercafe": [[1607,1427]],
+      "Laundromat": [[1058,1508]],
+      "Cafe": [[468,1526]],
+      "Supermart": [[824,1530]],
+      "Arcade": [[554,1692]],
+      "Apartments": [[963,1715]]
+    }
+  },
+  "Seoul.webp": {
+    "official": "SeoulOverview_Hi-Res.jpg",
+    "align": {"theta":180,"lockTheta":true,"scale":1.5714,"anchor":[[1375.5,1323],[2757,1962]],"window":0.05},
+    "zones": {
+      "Data Center": [[813,696]],
+      "Under Construction": [[1027,1440]],
+      "Hospital": [[2087,1404]],
+      "Mall": [[468,1586]],
+      "Apartments": [[1118,2158]]
+    }
+  },
+  "SYS-HORIZON.webp": {
+    "official": "SYSHORIZON_mapOverview.jpg",
+    "align": {"theta":270,"lockTheta":true,"scale":2.3925,"anchor":[[1024,1024],[2966,1668]],"window":0.05,"zoneFix":{"Library":{"u":[1.0924,-453.5],"v":[1.1249,-225.9]},"Work Space":{"u":[1.1075,-521],"v":[1.0664,-70.1]},"Art Gallery":{"u":[1.1615,-664.6],"v":[1.1258,-218.7]},"Museum":{"u":[1.162,-660.7],"v":[1.0814,-165.3]},"Campus":{"u":[1.1227,-540.4],"v":[1.1398,-255]}}},
+    "zones": {
+      "Library": [[923,419]],
+      "Work Space": [[482,855]],
+      "Art Gallery": [[954,986]],
+      "Museum": [[1431,986]],
+      "Campus": [[936,1346]]
+    }
+  },
+  "Fangwai City.webp": {
+    "official": "Fangwai City.png",
+    "align": {"theta":-25,"scale":[2,2.6],"anchor":[[914,1104],[2584,2172]],"window":0.08},
+    "zones": {
+      "Garden": [[599,477]],
+      "Transfer Station": [[1220,710],[1536,864],[1344,902],[1075,902]],
+      "Residential Area": [[455,1140],[384,860],[700,990]],
+      "Construction": [[878,1391],[912,1104],[634,1459],[960,1498]],
+      "Temple": [[1386,1431],[1114,1075],[1613,1075],[1133,1651],[1613,1651]]
+    }
+  }
+}

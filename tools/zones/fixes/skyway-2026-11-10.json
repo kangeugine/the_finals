@@ -1,0 +1,152 @@
+{
+  "map": "Skyway Stadium.webp",
+  "screen": {
+    "k": 0.21575,
+    "sx0": -83.75,
+    "sy0": 835
+  },
+  "pairs": [
+    {
+      "zone": "Business Office",
+      "from": [
+        676,
+        88
+      ],
+      "to": [
+        684,
+        100
+      ]
+    },
+    {
+      "zone": "Business Office",
+      "from": [
+        692,
+        197
+      ],
+      "to": [
+        706,
+        181
+      ]
+    },
+    {
+      "zone": "Open Office",
+      "from": [
+        173,
+        219
+      ],
+      "to": [
+        176,
+        250
+      ]
+    },
+    {
+      "zone": "Open Office",
+      "from": [
+        336,
+        266
+      ],
+      "to": [
+        341,
+        278
+      ]
+    },
+    {
+      "zone": "Open Office",
+      "from": [
+        322,
+        420
+      ],
+      "to": [
+        316,
+        451
+      ]
+    },
+    {
+      "zone": "Open Office",
+      "from": [
+        227,
+        466
+      ],
+      "to": [
+        249,
+        505
+      ]
+    },
+    {
+      "zone": "Construction",
+      "from": [
+        725,
+        373
+      ],
+      "to": [
+        735,
+        388
+      ]
+    },
+    {
+      "zone": "Construction",
+      "from": [
+        717,
+        435
+      ],
+      "to": [
+        725,
+        457
+      ]
+    },
+    {
+      "zone": "Residential District",
+      "from": [
+        535,
+        327
+      ],
+      "to": [
+        510,
+        344
+      ]
+    },
+    {
+      "zone": "Residential District",
+      "from": [
+        652,
+        328
+      ],
+      "to": [
+        625,
+        350
+      ]
+    },
+    {
+      "zone": "Estate",
+      "from": [
+        349,
+        446
+      ],
+      "to": [
+        337,
+        480
+      ]
+    },
+    {
+      "zone": "Market District",
+      "from": [
+        829,
+        663
+      ],
+      "to": [
+        779,
+        717
+      ]
+    }
+  ],
+  "groups": {
+    "Arc (Residential + Estate + Market)": [
+      "Residential District",
+      "Estate",
+      "Market District"
+    ]
+  },
+  "shiftOnly": [
+    "Business Office"
+  ]
+}

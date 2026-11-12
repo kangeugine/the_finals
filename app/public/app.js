@@ -269,10 +269,55 @@ function draw() {
   ctx.drawImage(state.img, -g.W / 2, -g.H / 2);
   ctx.restore();
 
+  drawZones(g, dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   if (state.showGrid) drawGrid(g);
   drawMeasure(g);
   drawPois(g);
+}
+
+// Zones (from tools/zones/build.js) are polygons in image px, drawn in the
+// image's own transform; their names are drawn upright in screen space.
+function drawZones(g, dpr) {
+  const zones = mapData().zones;
+  if (!zones?.length || settings().showZones === false) return;
+  const { zoom, panX, panY } = state.view;
+  ctx.save();
+  ctx.setTransform(dpr * zoom, 0, 0, dpr * zoom, dpr * panX, dpr * panY);
+  ctx.rotate(g.rad);
+  ctx.translate(-g.W / 2, -g.H / 2);
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = 2 / zoom;
+  zones.forEach((z, i) => {
+    const hue = (i * 137.5) % 360;
+    ctx.beginPath();
+    for (const poly of z.polygons) {
+      poly.forEach(([x, y], j) => (j ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+      ctx.closePath();
+    }
+    ctx.fillStyle = `hsla(${hue}, 85%, 55%, 0.14)`;
+    ctx.strokeStyle = `hsla(${hue}, 90%, 65%, 0.9)`;
+    ctx.fill();
+    ctx.stroke();
+  });
+  ctx.restore();
+
+  ctx.save();
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.font = '600 13px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+  ctx.fillStyle = '#fff';
+  for (const z of zones) {
+    const f = imageToFrame(g, z.label.x, z.label.y);
+    const s = frameToScreen(f.x, f.y);
+    ctx.strokeText(z.name, s.x, s.y);
+    ctx.fillText(z.name, s.x, s.y);
+  }
+  ctx.restore();
 }
 
 function gridStep() {
@@ -407,7 +452,37 @@ function drawPois(g) {
     if (selected || hover || c.label) {
       drawLabel(childName(parent, c), s.x, s.y + cr + 4, selected ? '#f5c518' : CHILD_COLOR);
     }
+    if ((selected || hover) && c.text) drawNote(c.text, s.x, s.y + cr + 24);
   }
+}
+
+// Multi-line text (e.g. a Question icon's text), wrapped, in a box below the icon.
+function drawNote(text, x, y) {
+  const MAX_W = 260, LINE = 15, PAD = 6;
+  ctx.font = '500 12px -apple-system, system-ui, sans-serif';
+  const lines = [];
+  for (const para of text.split('\n')) {
+    let line = '';
+    for (const word of para.split(/\s+/)) {
+      const next = line ? line + ' ' + word : word;
+      if (line && ctx.measureText(next).width > MAX_W) {
+        lines.push(line);
+        line = word;
+      } else line = next;
+    }
+    lines.push(line);
+  }
+  const w = Math.max(...lines.map((l) => ctx.measureText(l).width)) + PAD * 2;
+  const h = lines.length * LINE + PAD * 2 - 3;
+  ctx.fillStyle = 'rgba(17,19,23,0.92)';
+  ctx.fillRect(x - w / 2, y, w, h);
+  ctx.strokeStyle = CHILD_COLOR;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x - w / 2 + 0.5, y + 0.5, w - 1, h - 1);
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  lines.forEach((l, i) => ctx.fillText(l, x - w / 2 + PAD, y + PAD + i * LINE));
 }
 
 function drawIcon(item, s, r, ring, ringWidth) {
@@ -516,7 +591,9 @@ async function selectMap(id) {
   state.measure = { a: null, b: null };
   if (state.tool.startsWith(CHILD_TOOL_PREFIX)) setTool('select');
   localStorage.setItem('lastMap', id);
+  vodMapChanged(id);
   renderMapList();
+  renderPhotos();
 
   const map = state.maps.find((m) => m.id === id);
   $('loading').hidden = false;
@@ -592,6 +669,7 @@ function renderTools() {
 function setTool(tool) {
   if (tool.startsWith(CHILD_TOOL_PREFIX) && !state.selectedPoi) tool = 'select';
   state.tool = tool;
+  if (tool === 'select' || tool === 'measure') vod.linkNext = false;
   for (const b of document.querySelectorAll('.tool')) b.classList.toggle('active', b.dataset.tool === tool);
   canvas.classList.toggle('placing', tool !== 'select' && tool !== 'measure');
   // Placing a hidden type would make it vanish on click, so reveal it.
@@ -605,6 +683,8 @@ function renderDisplay() {
   const s = settings();
   $('icon-size').value = s.iconSize;
   $('icon-size-val').textContent = s.iconSize + 'px';
+  $('zones-toggle').checked = s.showZones !== false;
+  $('zones-toggle').disabled = !(state.img && mapData().zones?.length);
 
   const list = $('type-filters');
   list.innerHTML = '';
@@ -620,6 +700,13 @@ function renderDisplay() {
     li.querySelector('.count').textContent = pois.filter((p) => p.type === t.id).length;
     list.appendChild(li);
   }
+}
+
+function setZonesVisible(visible) {
+  settings().showZones = visible;
+  $('zones-toggle').checked = visible;
+  render();
+  scheduleSave();
 }
 
 function setTypeVisible(typeId, visible) {
@@ -812,6 +899,8 @@ function renderPoiList() {
 function renderSelected() {
   const p = state.selectedPoi;
   $('selected-panel').hidden = !p;
+  renderPhotos();
+  renderDraft();
   if (!p) return;
   const c = state.selectedChild;
   const item = c || p;
@@ -825,6 +914,14 @@ function renderSelected() {
   if (document.activeElement !== $('sel-x')) $('sel-x').value = Math.round(item.gridPos.x);
   if (document.activeElement !== $('sel-y')) $('sel-y').value = Math.round(item.gridPos.y);
   if (document.activeElement !== $('sel-label')) $('sel-label').value = item.label || '';
+  // Types with a text field (e.g. Question) get a multi-line box for the icon's text.
+  const textField = c && secondaryType(c.type)?.textField;
+  $('sel-text-field').hidden = !textField;
+  if (textField) {
+    $('sel-text-label').textContent = textField;
+    $('sel-text').placeholder = state.readOnly ? '' : `Write the ${textField.toLowerCase()}…`;
+    if (document.activeElement !== $('sel-text')) $('sel-text').value = c.text || '';
+  }
 
   const list = $('child-list');
   list.innerHTML = '';
@@ -842,6 +939,25 @@ function renderSelected() {
     li.onclick = () => selectChild(k);
     list.appendChild(li);
   }
+
+  // VOD timestamps linked to this POI (and its secondary icons) or to the selected secondary icon.
+  const linked = linkedTimestamps(p, c);
+  $('sel-ts').hidden = !linked.length;
+  const tsList = $('sel-ts-list');
+  tsList.innerHTML = '';
+  for (const { file, ts } of linked) {
+    const li = document.createElement('li');
+    li.innerHTML = '<span class="ts"></span><span class="name"></span>';
+    li.querySelector('.ts').textContent = fmtTime(ts.t, vodEntry(file)?.duration);
+    li.querySelector('.name').textContent = ts.text;
+    // Hosted (read-only) site has no videos, so it goes to YouTube instead.
+    const yt = youtubeUrl(file, ts.t);
+    li.prepend(yt ? youtubeLink(file, ts.t) : Object.assign(document.createElement('span'), { className: 'yt-slot' }));
+    li.title = file + (!state.readOnly ? ' — click to play' : yt ? ' — click to open on YouTube' : '');
+    if (!state.readOnly) li.onclick = () => playTimestamp(file, ts);
+    else if (yt) li.onclick = () => window.open(yt, '_blank', 'noopener');
+    tsList.appendChild(li);
+  }
 }
 
 function selectPoi(p, center = false) {
@@ -856,6 +972,198 @@ function selectPoi(p, center = false) {
   renderPoiList();
   renderSelected();
   render();
+}
+
+// ------------------------------- photos -----------------------------------
+// Each POI / secondary icon can have `photos: [file]`, stored in app/data/photos
+// by the server. The strip shows the selected POI's photos, then each of its
+// secondary icons' photos (with that icon above the photo) — or, when a
+// secondary icon is selected, only that icon's photos.
+
+const PHOTO_MAX_PX = 1600;   // longest side after resizing in the browser
+const PHOTO_QUALITY = 0.85;  // JPEG quality
+const photoUrl = (file) => 'photos/' + encodeURIComponent(file);
+
+function renderPhotos() {
+  const p = state.selectedPoi;
+  $('photo-strip').hidden = !p;
+  if (!p) return;
+  const target = activeItem();
+  $('photo-target').textContent = 'Add photo to ' + (target === p ? poiName(p) : childName(p, target));
+
+  const list = $('photo-list');
+  list.innerHTML = '';
+  // `head` labels the photo's owner: { text, icon?, onClick?, yt?: { file, t } }.
+  // With no `file` the tile shows `head.note` (a timestamp's description) instead of a photo.
+  const addTile = (item, file, head) => {
+    const tile = document.createElement('div');
+    tile.className = 'photo-tile';
+    if (head) {
+      const h = document.createElement('div');
+      h.className = 'photo-head';
+      h.innerHTML = '<img alt="" /><span></span>';
+      if (head.icon) h.querySelector('img').src = head.icon;
+      else h.querySelector('img').remove();
+      h.querySelector('span').textContent = head.text;
+      if (head.onClick) {
+        h.classList.add('link');
+        h.title = 'Play in VOD review';
+        h.onclick = (e) => {
+          e.stopPropagation();
+          head.onClick();
+        };
+      }
+      if (head.yt) h.prepend(youtubeLink(head.yt.file, head.yt.t, head.yt.text));
+      tile.appendChild(h);
+    }
+    if (!file) {
+      const note = document.createElement('div');
+      note.className = 'photo-note';
+      note.textContent = head.note;
+      tile.classList.add('note');
+      tile.appendChild(note);
+      if (head.onClick) tile.onclick = head.onClick;
+      list.appendChild(tile);
+      return;
+    }
+    const img = document.createElement('img');
+    img.className = 'photo';
+    img.loading = 'lazy';
+    img.src = photoUrl(file);
+    tile.appendChild(img);
+    const del = document.createElement('button');
+    del.className = 'photo-del';
+    del.title = 'Remove photo';
+    del.textContent = '×';
+    del.onclick = (e) => {
+      e.stopPropagation();
+      removePhoto(item, file);
+    };
+    tile.appendChild(del);
+    tile.onclick = () => openLightbox(file);
+    list.appendChild(tile);
+  };
+  // A selected secondary icon shows just its own photos; the POI shows its own
+  // plus all of its secondary icons'. VOD timestamps linked to an icon put their
+  // YouTube link on that icon's photos (the first timestamp, if there are several);
+  // a timestamp with screenshots shows those, and any other gets a text tile.
+  const c = state.selectedChild;
+  const pending = new Map(); // icon id -> its linked timestamps not shown yet
+  for (const l of linkedTimestamps(p, c)) {
+    const key = l.ts.link.child || l.ts.link.poi;
+    pending.set(key, [...(pending.get(key) || []), l]);
+  }
+  const tsHead = ({ file: vodFile, ts }, base) => {
+    const yt = youtubeUrl(vodFile, ts.t);
+    return {
+      ...base,
+      note: ts.text,
+      yt: yt && { file: vodFile, t: ts.t, text: ts.text },
+      onClick: !state.readOnly ? () => playTimestamp(vodFile, ts)
+        : yt ? () => window.open(yt, '_blank', 'noopener') : null,
+    };
+  };
+  const addItemPhotos = (item, base) => {
+    if (!item.photos?.length) return;
+    const l = pending.get(item.id)?.find((x) => !x.ts.photos?.length);
+    if (l) pending.set(item.id, pending.get(item.id).filter((x) => x !== l));
+    const head = l ? tsHead(l, base || { text: poiName(item), icon: state.poiTypes.find((t) => t.id === item.type)?.src }) : base;
+    for (const file of item.photos) addTile(item, file, head);
+  };
+  const childHead = (k) => ({ icon: secondaryType(k.type)?.src, text: childName(p, k) });
+  if (c) addItemPhotos(c, childHead(c));
+  else {
+    addItemPhotos(p, null);
+    for (const k of children(p)) addItemPhotos(k, childHead(k));
+  }
+  for (const l of [...pending.values()].flat().sort((a, b) => a.ts.t - b.ts.t)) {
+    const time = fmtTime(l.ts.t, vodEntry(l.file)?.duration);
+    const base = { text: (youtubeUrl(l.file) ? '' : '▶ ') + time + (l.ts.photos?.length ? ' ' + l.ts.text : '') };
+    if (l.ts.photos?.length) for (const file of l.ts.photos) addTile(l.ts, file, tsHead(l, base));
+    else addTile(l.ts, null, tsHead(l, base));
+  }
+}
+
+// Resize to PHOTO_MAX_PX (keeps the repo / Pages site small) and re-encode as JPEG.
+// `file` is anything createImageBitmap takes: a File, or the <video> for a screenshot.
+async function resizePhoto(file) {
+  const bmp = await createImageBitmap(file);
+  const k = Math.min(1, PHOTO_MAX_PX / Math.max(bmp.width, bmp.height));
+  const c = document.createElement('canvas');
+  c.width = Math.round(bmp.width * k);
+  c.height = Math.round(bmp.height * k);
+  c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+  bmp.close();
+  return new Promise((resolve, reject) =>
+    c.toBlob((b) => (b ? resolve(b) : reject(new Error('could not encode image'))), 'image/jpeg', PHOTO_QUALITY));
+}
+
+// Upload a JPEG blob; returns the stored file name.
+async function uploadPhoto(blob) {
+  const res = await fetch('api/photos?ext=jpg', { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob });
+  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || res.statusText);
+  return (await res.json()).file;
+}
+
+const deletePhotoFile = (file) => fetch('api/photos/' + encodeURIComponent(file), { method: 'DELETE' }).catch(() => {});
+
+async function uploadPhotos(files) {
+  const target = activeItem();
+  if (state.readOnly || !target) return;
+  const images = [...files].filter((f) => f.type.startsWith('image/'));
+  if (!images.length) return;
+  const tile = $('photo-upload');
+  tile.classList.add('busy');
+  try {
+    for (const [i, f] of images.entries()) {
+      setSaveState(`Uploading photo ${i + 1}/${images.length}…`);
+      const file = await uploadPhoto(await resizePhoto(f));
+      (target.photos ??= []).push(file);
+      renderPhotos();
+    }
+    scheduleSave();
+  } catch (e) {
+    setSaveState('Photo upload failed: ' + e.message, true);
+  } finally {
+    tile.classList.remove('busy');
+  }
+}
+
+function removePhoto(item, file) {
+  item.photos = (item.photos || []).filter((f) => f !== file);
+  if (!item.photos.length) delete item.photos;
+  deletePhotoFile(file);
+  renderPhotos();
+  renderTsList();
+  scheduleSave();
+}
+
+function openLightbox(file) {
+  $('lightbox-img').src = photoUrl(file);
+  $('lightbox').hidden = false;
+}
+const closeLightbox = () => ($('lightbox').hidden = true);
+
+function bindPhotos() {
+  $('photo-input').onchange = (e) => {
+    uploadPhotos(e.target.files);
+    e.target.value = '';
+  };
+  const tile = $('photo-upload');
+  tile.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    tile.classList.add('dragover');
+  });
+  tile.addEventListener('dragleave', () => tile.classList.remove('dragover'));
+  tile.addEventListener('drop', (e) => {
+    e.preventDefault();
+    tile.classList.remove('dragover');
+    uploadPhotos(e.dataTransfer.files);
+  });
+  // A photo dropped anywhere else shouldn't navigate the tab to the file.
+  window.addEventListener('dragover', (e) => e.preventDefault());
+  window.addEventListener('drop', (e) => e.preventDefault());
+  $('lightbox').onclick = closeLightbox;
 }
 
 function selectChild(c) {
@@ -958,8 +1266,17 @@ function bindControls() {
     render();
     scheduleSave();
   };
+  $('sel-text').oninput = (e) => {
+    const c = state.selectedChild;
+    if (!c) return;
+    c.text = e.target.value.trim() ? e.target.value : undefined;
+    render();
+    scheduleSave();
+  };
   $('sel-delete').onclick = deleteSelected;
   $('fit-btn').onclick = fitView;
+
+  $('zones-toggle').onchange = (e) => setZonesVisible(e.target.checked);
 
   $('icon-size').oninput = (e) => {
     settings().iconSize = Number(e.target.value);
@@ -973,13 +1290,19 @@ function bindControls() {
     if (e.key === 'Enter') saveKnownDistance();
   };
 
+  bindPhotos();
   window.addEventListener('resize', render);
+  new ResizeObserver(render).observe(canvas);
   window.addEventListener('keydown', onKey);
   bindCanvas();
 }
 
 function onKey(e) {
   if (e.target.matches('input, select, textarea')) return;
+  if (!$('lightbox').hidden) {
+    if (e.key === 'Escape') closeLightbox();
+    return;
+  }
   if (e.key === 'Escape' || e.key === 'v' || e.key === 'V') {
     if (e.key === 'Escape' && state.tool === 'measure' && state.measure.a) {
       measureClick(null); // first Esc clears the measurement, second leaves the tool
@@ -994,8 +1317,12 @@ function onKey(e) {
     setTool(state.tool === 'measure' ? 'select' : 'measure');
   } else if (e.key === 'f' || e.key === 'F') {
     fitView();
+  } else if ((e.key === 'z' || e.key === 'Z') && !$('zones-toggle').disabled) {
+    setZonesVisible(settings().showZones === false);
   } else if (state.readOnly) {
     return;
+  } else if ((e.key === 'r' || e.key === 'R') && !e.metaKey && !e.ctrlKey) {
+    toggleVodPanel(!!$('vod-panel').hidden);
   } else if (/^[1-9]$/.test(e.key) && state.poiTypes[e.key - 1]) {
     setTool(state.poiTypes[e.key - 1].id);
   } else if (e.key === 'Delete' || e.key === 'Backspace') {
@@ -1134,6 +1461,7 @@ function placePoi(pos) {
   const poi = { id: newId(), type: state.tool, imagePos: ip };
   mapData().pois.push(poi);
   selectPoi(poi);
+  vodLinkPlaced(poi, null);
   poisChanged();
 }
 
@@ -1144,6 +1472,7 @@ function placeChild(pos) {
   const child = { id: newId(), type: state.tool.slice(CHILD_TOOL_PREFIX.length), imagePos: ip };
   children(parent).push(child);
   state.selectedChild = child;
+  vodLinkPlaced(parent, child);
   poisChanged();
 }
 
@@ -1173,6 +1502,598 @@ function updateStatus() {
   $('cursor-pos').textContent = inside ? `x ${Math.round(gp.x)}  y ${Math.round(gp.y)}` : 'outside map';
 }
 
+// ------------------------------ VOD review --------------------------------
+// Videos in vod_review/ play in the side panel. While paused there's a draft
+// timestamp ("MM:SS Description") that can be linked to a POI / secondary icon
+// (existing, or placed new) and given screenshots of the current frame.
+// Saved in state.data.vods[file] = { map, duration, timestamps: [{ id, t, text,
+// link, photos }] }; the server mirrors each list into vod_review/<name>.txt,
+// always starting with "00:00 Start". `link` is { map, poi, child? } (ids) and
+// may point at an icon that has since been deleted.
+
+const VOD_MIN_WIDTH = 320;
+const vod = {
+  files: [],        // [{ file, name, size, txt }] from api/vods
+  file: null,       // loaded video
+  draft: null,      // { t, text, link, photos, editing: the timestamp being edited, or null }
+  linkNext: false,  // link the next icon placed on the map to the draft
+};
+const video = $('vod-video');
+
+// "MM:SS", or "H:MM:SS" for videos an hour or longer (YouTube's format).
+function fmtTime(t, duration = video.duration) {
+  const s = Math.max(0, Math.floor(t || 0));
+  const mmss = String(Math.floor((s % 3600) / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+  return duration >= 3600 ? Math.floor(s / 3600) + ':' + mmss : mmss;
+}
+
+function vodEntry(file, create = false) {
+  const vods = (state.data.vods ??= {});
+  if (!vods[file] && create) vods[file] = { map: state.currentId, timestamps: [] };
+  return vods[file];
+}
+
+// Timestamps from an existing .txt ("MM:SS text" / "H:MM:SS text"), minus the Start line.
+function parseTimestampTxt(txt) {
+  const out = [];
+  for (const line of txt.split('\n')) {
+    const m = /^\s*(?:(\d+):)?(\d{1,2}):(\d{2})\s+(.+?)\s*$/.exec(line);
+    if (!m) continue;
+    const t = Number(m[1] || 0) * 3600 + Number(m[2]) * 60 + Number(m[3]);
+    if (t === 0 && m[4] === 'Start') continue;
+    out.push({ id: newId(), t, text: m[4] });
+  }
+  return out.sort((a, b) => a.t - b.t);
+}
+
+// Timestamps (all VODs) linked to a secondary icon, or to a POI and its secondary icons.
+function linkedTimestamps(poi, child) {
+  const out = [];
+  for (const [file, v] of Object.entries(state.data.vods || {})) {
+    for (const ts of v.timestamps || []) {
+      const l = ts.link;
+      if (l && l.map === state.currentId && l.poi === poi.id && (!child || l.child === child.id)) out.push({ file, ts });
+    }
+  }
+  return out;
+}
+
+// The video id from a youtu.be / youtube.com (watch, live, shorts, embed) URL.
+function youtubeId(url) {
+  try {
+    const u = new URL(url.trim());
+    const host = u.hostname.replace(/^(www|m)\./, '');
+    if (host === 'youtu.be') return u.pathname.slice(1).split('/')[0] || null;
+    if (host !== 'youtube.com' && host !== 'youtube-nocookie.com') return null;
+    return u.searchParams.get('v') || /^\/(?:live|shorts|embed)\/([\w-]+)/.exec(u.pathname)?.[1] || null;
+  } catch {
+    return null;
+  }
+}
+
+// Link to the VOD's YouTube upload at `t` seconds, or null if it has none.
+function youtubeUrl(file, t = 0) {
+  const ytId = youtubeId(vodEntry(file)?.youtube || '');
+  return ytId && `https://youtu.be/${ytId}` + (t >= 1 ? `?t=${Math.floor(t)}` : '');
+}
+
+function youtubeLink(file, t, text) {
+  const a = document.createElement('a');
+  a.className = 'yt';
+  a.href = youtubeUrl(file, t);
+  a.target = '_blank';
+  a.rel = 'noopener';
+  a.innerHTML = '<img src="icons/youtube.png" alt="YouTube" />';
+  a.title = `Open on YouTube at ${fmtTime(t, vodEntry(file)?.duration)}` + (text ? ` — ${text}` : '');
+  a.onclick = (e) => e.stopPropagation();
+  return a;
+}
+
+const linkOf = (poi, child) => ({ map: state.currentId, poi: poi.id, ...(child && { child: child.id }) });
+
+function resolveLink(link) {
+  const poi = state.data.maps[link.map]?.pois?.find((p) => p.id === link.poi);
+  if (!poi) return null;
+  const child = link.child ? children(poi).find((c) => c.id === link.child) : null;
+  return link.child && !child ? null : { poi, child };
+}
+
+function linkInfo(link) {
+  const r = resolveLink(link);
+  if (!r) return { text: 'deleted icon', src: '' };
+  const type = r.child ? secondaryType(r.child.type) : state.poiTypes.find((t) => t.id === r.poi.type);
+  if (link.map !== state.currentId) {
+    const mapName = state.maps.find((m) => m.id === link.map)?.name || link.map;
+    return { text: `${(r.child || r.poi).label || type?.label} · ${mapName}`, src: type?.src };
+  }
+  const text = r.child ? `${childName(r.poi, r.child)} · ${poiName(r.poi)}` : poiName(r.poi);
+  return { text, src: type?.src };
+}
+
+function linkChip(link) {
+  const chip = document.createElement('span');
+  chip.className = 'link-chip';
+  const { text, src } = linkInfo(link);
+  chip.innerHTML = '<img alt="" /><span></span>';
+  if (src) chip.querySelector('img').src = src;
+  else chip.querySelector('img').remove();
+  chip.querySelector('span').textContent = text;
+  chip.title = 'Show on map';
+  chip.onclick = (e) => {
+    e.stopPropagation();
+    goToLink(link);
+  };
+  return chip;
+}
+
+async function goToLink(link) {
+  if (!state.maps.some((m) => m.id === link.map)) return;
+  if (link.map !== state.currentId) await selectMap(link.map);
+  const r = resolveLink(link);
+  if (!r || !state.img) return;
+  if (!isVisible(r.poi)) setTypeVisible(r.poi.type, true);
+  selectPoi(r.poi, true);
+  if (r.child) selectChild(r.child);
+}
+
+// ------- panel / loading
+
+async function toggleVodPanel(open) {
+  if (state.readOnly) return;
+  $('vod-panel').hidden = !open;
+  $('vod-toggle').innerHTML = (open ? '🎬 Close VOD review' : '🎬 Open VOD review') + ' <kbd>R</kbd>';
+  localStorage.setItem('vodOpen', open ? '1' : '');
+  if (!open) return video.pause();
+  renderVod();
+  if (!vod.files.length) await refreshVods();
+}
+
+async function refreshVods() {
+  try {
+    const res = await fetch('api/vods');
+    if (!res.ok) throw new Error(res.statusText);
+    vod.files = await res.json();
+  } catch (e) {
+    setSaveState('Could not list VODs: ' + e.message, true);
+  }
+  const sel = $('vod-select');
+  sel.innerHTML = '<option value="">— choose a video —</option>';
+  for (const f of vod.files) {
+    const o = document.createElement('option');
+    o.value = f.file;
+    o.textContent = f.name + (vodEntry(f.file)?.timestamps?.length ? ` (${vodEntry(f.file).timestamps.length})` : '');
+    sel.appendChild(o);
+  }
+  sel.value = vod.file || '';
+  const last = localStorage.getItem('lastVod');
+  if (!vod.file && vod.files.some((f) => f.file === last)) loadVod(last);
+}
+
+// Ask before throwing away a draft that has something in it.
+function draftDirty(d = vod.draft) {
+  if (!d) return false;
+  if (!d.editing) return !!(d.text.trim() || d.link || d.photos.length);
+  const e = d.editing;
+  return d.text !== e.text || d.t !== e.t || JSON.stringify(d.link) !== JSON.stringify(e.link ?? null)
+    || d.photos.join() !== (e.photos || []).join();
+}
+const okToDiscard = () => !draftDirty() || confirm('Discard the unsaved timestamp?');
+
+function loadVod(file) {
+  if (file === vod.file) return true;
+  if (!okToDiscard()) {
+    $('vod-select').value = vod.file || '';
+    return false;
+  }
+  discardDraft();
+  vod.file = file || null;
+  localStorage.setItem('lastVod', file || '');
+  $('vod-select').value = file || '';
+  video.removeAttribute('src');
+  if (file) video.src = 'vods/' + encodeURIComponent(file);
+  video.load();
+
+  if (file) {
+    // The VOD's map: the one it was reviewed on, else a map named in the file name.
+    const norm = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const guess = [...state.maps].sort((a, b) => b.name.length - a.name.length).find((m) => norm(file).includes(norm(m.name)));
+    const mapId = state.maps.find((m) => m.id === vodEntry(file)?.map)?.id || guess?.id || state.currentId;
+
+    // First open of a video with a hand-written .txt: import it.
+    const txt = vod.files.find((f) => f.file === file)?.txt;
+    const imported = !vodEntry(file) && txt ? parseTimestampTxt(txt) : [];
+    if (imported.length) {
+      state.data.vods[file] = { map: mapId, timestamps: imported };
+      scheduleSave();
+    }
+    if (mapId !== state.currentId) selectMap(mapId);
+  }
+  renderVod();
+  return true;
+}
+
+function vodMapChanged(id) {
+  const entry = vod.file && vodEntry(vod.file);
+  if (entry && entry.map !== id) {
+    entry.map = id;
+    scheduleSave();
+  }
+}
+
+// ------- playback
+
+const seekTo = (t) => {
+  if (video.readyState === 0) video.addEventListener('loadedmetadata', () => seekTo(t), { once: true });
+  else video.currentTime = Math.min(Math.max(t, 0), video.duration || t);
+};
+const seekBy = (dt) => seekTo(video.currentTime + dt);
+const togglePlay = () => (video.paused ? video.play().catch(() => {}) : video.pause());
+
+// Space / ←→ / ⌃⌘←→ / Enter / S. Capture phase so the native <video> controls
+// don't also handle the arrows.
+function onVodKey(e) {
+  if ($('vod-panel').hidden || !vod.file || !$('lightbox').hidden) return;
+  if (e.target.matches('input, select, textarea')) return;
+  const mod = e.metaKey || e.ctrlKey || e.altKey;
+  if ((e.key === ' ' || e.key === 'k') && !mod) togglePlay();
+  else if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !e.shiftKey && !e.altKey) {
+    const step = e.ctrlKey && e.metaKey ? 3 : !e.ctrlKey && !e.metaKey ? 10 : 0;
+    if (!step) return; // leave other combos (e.g. ⌘← = back) to the browser
+    seekBy(e.key === 'ArrowLeft' ? -step : step);
+  } else if (e.key === 'Enter' && !mod && video.paused) {
+    ensureDraft();
+    $('draft-text').focus();
+  } else if ((e.key === 's' || e.key === 'S') && !mod) takeScreenshot();
+  else return;
+  e.preventDefault();
+  e.stopPropagation();
+}
+
+// ------- draft
+
+function ensureDraft() {
+  if (vod.draft || !vod.file || !video.paused || video.readyState === 0) return renderDraft();
+  vod.draft = { t: video.currentTime, text: '', link: null, photos: [], editing: null };
+  renderDraft();
+}
+
+function discardDraft() {
+  const d = vod.draft;
+  if (!d) return;
+  const keep = new Set(d.editing?.photos || []);
+  for (const f of d.photos) if (!keep.has(f)) deletePhotoFile(f);
+  vod.draft = null;
+  stopLinkNext();
+}
+
+function stopLinkNext() {
+  if (!vod.linkNext) return;
+  vod.linkNext = false;
+  setTool('select');
+}
+
+function editTimestamp(ts) {
+  if (vod.draft?.editing === ts) return seekTo(ts.t);
+  if (!okToDiscard()) return;
+  discardDraft();
+  video.pause();
+  seekTo(ts.t);
+  vod.draft = { t: ts.t, text: ts.text, link: ts.link ?? null, photos: [...(ts.photos || [])], editing: ts };
+  renderVod();
+  if (ts.link) goToLink(ts.link);
+}
+
+async function playTimestamp(file, ts) {
+  if (state.readOnly) return;
+  await toggleVodPanel(true);
+  if (!vod.files.some((f) => f.file === file)) await refreshVods();
+  if (!vod.files.some((f) => f.file === file)) return setSaveState('Video not in vod_review/: ' + file, true);
+  if (loadVod(file)) editTimestamp(ts);
+}
+
+function saveDraft() {
+  const d = vod.draft;
+  const text = d?.text.trim();
+  if (!text) return $('draft-text').focus();
+  const entry = vodEntry(vod.file, true);
+  entry.map = state.currentId;
+  if (video.duration) entry.duration = round1(video.duration);
+  const ts = d.editing || { id: newId() };
+  for (const f of ts.photos || []) if (!d.photos.includes(f)) deletePhotoFile(f);
+  Object.assign(ts, { t: round1(d.t), text, link: d.link || undefined, photos: d.photos.length ? d.photos : undefined });
+  if (!d.editing) entry.timestamps.push(ts);
+  entry.timestamps.sort((a, b) => a.t - b.t);
+  vod.draft = null;
+  stopLinkNext();
+  $('draft-text').blur();
+  ensureDraft();
+  renderVod();
+  renderSelected();
+  scheduleSave();
+}
+
+function deleteTimestamp(ts) {
+  const entry = vodEntry(vod.file);
+  if (vod.draft?.editing === ts) discardDraft();
+  for (const f of ts.photos || []) deletePhotoFile(f);
+  entry.timestamps = entry.timestamps.filter((x) => x !== ts);
+  ensureDraft();
+  renderVod();
+  renderSelected();
+  scheduleSave();
+}
+
+// A "New" icon button was used and the icon has just been placed.
+function vodLinkPlaced(poi, child) {
+  if (!vod.linkNext || !vod.draft) return;
+  vod.draft.link = linkOf(poi, child);
+  stopLinkNext();
+  renderDraft();
+}
+
+async function takeScreenshot() {
+  if (!vod.file || !video.videoWidth) return;
+  if (!video.paused) video.pause();
+  if (!vod.draft) vod.draft = { t: video.currentTime, text: '', link: null, photos: [], editing: null };
+  const d = vod.draft;
+  const btn = $('draft-shot');
+  btn.disabled = true;
+  try {
+    setSaveState('Saving screenshot…');
+    const file = await uploadPhoto(await resizePhoto(video));
+    if (vod.draft === d) d.photos.push(file);
+    else deletePhotoFile(file); // the draft was saved / discarded meanwhile
+    setSaveState('Screenshot added');
+  } catch (e) {
+    setSaveState('Screenshot failed: ' + e.message, true);
+  } finally {
+    btn.disabled = false;
+    renderDraft();
+  }
+}
+
+// ------- rendering
+
+function renderVod() {
+  $('vod-select').value = vod.file || '';
+  const ytInput = $('vod-youtube');
+  ytInput.disabled = !vod.file;
+  if (document.activeElement !== ytInput) ytInput.value = (vod.file && vodEntry(vod.file)?.youtube) || '';
+  ytInput.classList.toggle('invalid', !!ytInput.value.trim() && !youtubeId(ytInput.value));
+  const yt = vod.file && youtubeUrl(vod.file);
+  $('vod-youtube-open').hidden = !yt;
+  if (yt) $('vod-youtube-open').href = yt;
+  $('vod-file-hint').textContent = vod.file
+    ? `Saved to vod_review/${vod.file.replace(/\.[^.]+$/, '')}.txt`
+    : vod.files.length ? '' : 'No videos in vod_review/.';
+  renderVodTime();
+  renderTsList();
+  renderDraft();
+}
+
+function renderVodTime() {
+  $('vod-play').textContent = video.paused ? '▶' : '❚❚';
+  $('vod-time').textContent = vod.file && video.readyState ? `${fmtTime(video.currentTime)} / ${fmtTime(video.duration)}` : '';
+  if (vod.draft) $('draft-time').textContent = fmtTime(vod.draft.t);
+  markCurrentTs();
+}
+
+function renderTsList() {
+  const list = $('ts-list');
+  list.innerHTML = '';
+  const items = (vod.file && vodEntry(vod.file)?.timestamps) || [];
+  $('ts-count').textContent = items.length;
+  if (!vod.file) return;
+  const row = (t, text, ts) => {
+    const li = document.createElement('li');
+    li.dataset.t = t;
+    li.classList.toggle('selected', !!ts && vod.draft?.editing === ts);
+    li.innerHTML = '<span class="ts"></span><span class="name"></span>';
+    li.querySelector('.ts').textContent = fmtTime(t);
+    li.querySelector('.name').textContent = text;
+    if (youtubeUrl(vod.file)) li.prepend(youtubeLink(vod.file, t));
+    if (ts) {
+      li.title = 'Edit (and show its icon on the map)';
+      if (ts.link) li.appendChild(linkChip(ts.link));
+      if (ts.photos?.length) {
+        const n = document.createElement('span');
+        n.className = 'val';
+        n.textContent = '📷' + ts.photos.length;
+        li.appendChild(n);
+      }
+      const del = document.createElement('button');
+      del.title = 'Delete timestamp';
+      del.textContent = '×';
+      del.onclick = (e) => {
+        e.stopPropagation();
+        deleteTimestamp(ts);
+      };
+      li.appendChild(del);
+    }
+    li.onclick = () => (ts ? editTimestamp(ts) : seekTo(0));
+    list.appendChild(li);
+  };
+  row(0, 'Start', null);
+  for (const ts of items) row(ts.t, ts.text, ts);
+  markCurrentTs();
+}
+
+// Highlight the timestamp the playhead is in, without rebuilding the list.
+function markCurrentTs() {
+  const now = video.currentTime + 0.25;
+  const lis = [...$('ts-list').children];
+  const current = lis.findLast((li) => Number(li.dataset.t) <= now);
+  for (const li of lis) li.classList.toggle('current', li === current);
+}
+
+function renderDraft() {
+  const d = vod.draft;
+  $('vod-draft').hidden = !d || $('vod-panel').hidden;
+  if (!d) return;
+  $('draft-time').textContent = fmtTime(d.t);
+  if (document.activeElement !== $('draft-text')) $('draft-text').value = d.text;
+  $('draft-save').textContent = d.editing ? 'Save changes' : 'Add timestamp';
+  $('draft-save').disabled = !d.text.trim();
+  $('draft-retime').hidden = !d.editing;
+
+  const chip = $('draft-link');
+  chip.replaceChildren(d.link ? linkChip(d.link) : document.createTextNode('none'));
+  $('draft-unlink').hidden = !d.link;
+  const sel = state.selectedPoi;
+  const selBtn = $('draft-link-selected');
+  selBtn.disabled = !sel;
+  selBtn.title = sel ? 'Link ' + (state.selectedChild ? childName(sel, state.selectedChild) : poiName(sel))
+    : 'Select an icon on the map first';
+
+  for (const b of $('draft-new').children) {
+    const isChild = b.dataset.tool.startsWith(CHILD_TOOL_PREFIX);
+    b.disabled = isChild && !sel;
+    b.classList.toggle('active', vod.linkNext && state.tool === b.dataset.tool);
+  }
+
+  const photos = $('draft-photos');
+  photos.innerHTML = '';
+  for (const file of d.photos) {
+    const tile = document.createElement('div');
+    tile.className = 'draft-photo';
+    tile.innerHTML = '<img alt="" /><button title="Remove">×</button>';
+    tile.querySelector('img').src = photoUrl(file);
+    tile.querySelector('img').onclick = () => openLightbox(file);
+    tile.querySelector('button').onclick = () => {
+      d.photos = d.photos.filter((f) => f !== file);
+      if (!d.editing?.photos?.includes(file)) deletePhotoFile(file);
+      renderDraft();
+    };
+    photos.appendChild(tile);
+  }
+
+  $('draft-hint').textContent = vod.linkNext
+    ? 'Click the map to place the new icon — it will be linked to this timestamp.'
+    : d.editing ? 'Editing a saved timestamp.' : '';
+}
+
+// ------- setup
+
+function initVod() {
+  const newIcons = $('draft-new');
+  const addNewBtn = (t, tool, title) => {
+    const b = document.createElement('button');
+    b.className = 'new-icon';
+    b.dataset.tool = tool;
+    b.title = title;
+    b.innerHTML = '<img alt="" />';
+    b.querySelector('img').src = t.src;
+    b.onclick = () => {
+      if (vod.linkNext && state.tool === tool) return stopLinkNext();
+      setTool(tool);
+      vod.linkNext = state.tool === tool;
+      renderDraft();
+    };
+    newIcons.appendChild(b);
+  };
+  for (const t of state.poiTypes) addNewBtn(t, t.id, `New ${t.label} — click the map to place it`);
+  for (const t of state.secondaryTypes) {
+    addNewBtn(t, CHILD_TOOL_PREFIX + t.id, `New ${t.label} on the selected POI — click the map to place it`);
+  }
+
+  $('vod-toggle').onclick = () => toggleVodPanel(!!$('vod-panel').hidden);
+  $('vod-close').onclick = () => toggleVodPanel(false);
+  $('vod-refresh').onclick = refreshVods;
+  $('vod-select').onchange = (e) => loadVod(e.target.value);
+  $('vod-youtube').oninput = (e) => {
+    if (!vod.file) return;
+    const url = e.target.value.trim();
+    if (url) vodEntry(vod.file, true).youtube = url;
+    else if (vodEntry(vod.file)) delete vodEntry(vod.file).youtube;
+    renderVod();
+    renderSelected();
+    scheduleSave();
+  };
+  $('vod-play').onclick = togglePlay;
+  for (const b of document.querySelectorAll('[data-seek]')) b.onclick = () => seekBy(Number(b.dataset.seek));
+
+  video.addEventListener('loadedmetadata', () => {
+    const entry = vodEntry(vod.file);
+    if (entry && entry.duration !== round1(video.duration)) {
+      entry.duration = round1(video.duration);
+      scheduleSave();
+    }
+    ensureDraft();
+    renderVod();
+  });
+  video.addEventListener('pause', () => {
+    ensureDraft();
+    renderVodTime();
+  });
+  video.addEventListener('play', () => {
+    if (vod.draft && !draftDirty()) {
+      discardDraft();
+      renderVod();
+    }
+    renderVodTime();
+  });
+  video.addEventListener('timeupdate', () => {
+    // A new draft's time follows the playhead while paused (seeking to the moment).
+    const d = vod.draft;
+    if (d && !d.editing && video.paused) d.t = video.currentTime;
+    renderVodTime();
+  });
+  video.addEventListener('error', () => {
+    if (vod.file) setSaveState('Could not play ' + vod.file, true);
+  });
+  window.addEventListener('keydown', onVodKey, true);
+
+  $('draft-text').oninput = (e) => {
+    vod.draft.text = e.target.value;
+    $('draft-save').disabled = !e.target.value.trim();
+  };
+  $('draft-text').onkeydown = (e) => {
+    if (e.key === 'Enter') saveDraft();
+    else if (e.key === 'Escape') e.target.blur();
+  };
+  $('draft-time').onclick = () => seekTo(vod.draft.t);
+  $('draft-save').onclick = saveDraft;
+  $('draft-cancel').onclick = () => {
+    discardDraft();
+    ensureDraft();
+    renderVod();
+  };
+  $('draft-retime').onclick = () => {
+    vod.draft.t = video.currentTime;
+    renderDraft();
+  };
+  $('draft-link-selected').onclick = () => {
+    if (!state.selectedPoi) return;
+    vod.draft.link = linkOf(state.selectedPoi, state.selectedChild);
+    renderDraft();
+  };
+  $('draft-unlink').onclick = () => {
+    vod.draft.link = null;
+    renderDraft();
+  };
+  $('draft-shot').onclick = takeScreenshot;
+
+  // Drag the panel's left edge to resize it.
+  const panel = $('vod-panel');
+  const setWidth = (w) => (panel.style.width = Math.max(VOD_MIN_WIDTH, Math.min(w, window.innerWidth - 400)) + 'px');
+  if (localStorage.getItem('vodWidth')) setWidth(Number(localStorage.getItem('vodWidth')));
+  $('vod-resizer').addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    const move = (ev) => setWidth(window.innerWidth - ev.clientX);
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      panel.classList.remove('resizing');
+      localStorage.setItem('vodWidth', parseInt(panel.style.width, 10));
+    };
+    panel.classList.add('resizing');
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  });
+
+  if (localStorage.getItem('vodOpen') && !state.readOnly) toggleVodPanel(true);
+}
+
 // --------------------------------- init -----------------------------------
 
 async function init() {
@@ -1184,6 +2105,7 @@ async function init() {
   state.readOnly = !!config.readOnly;
   document.body.classList.toggle('readonly', state.readOnly);
   for (const el of document.querySelectorAll('#sel-x, #sel-y, #sel-label')) el.disabled = state.readOnly;
+  $('sel-text').readOnly = state.readOnly; // still readable on the hosted site
   if (state.readOnly) setSaveState('Read-only');
   state.maps = config.maps;
   state.poiTypes = config.poiTypes;
@@ -1198,6 +2120,7 @@ async function init() {
 
   renderTools();
   bindControls();
+  initVod();
 
   const last = localStorage.getItem('lastMap');
   const first = state.maps.find((m) => m.id === last) ?? state.maps[0];

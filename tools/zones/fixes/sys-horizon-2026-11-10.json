@@ -1,0 +1,19 @@
+{
+  "map": "SYS-HORIZON.webp",
+  "screen": { "k": 0.28171, "sx0": 123, "sy0": 1344.7 },
+  "pairs": [
+    { "zone": "Library", "from": [664, 222], "to": [673, 128] },
+    { "zone": "Library", "from": [720, 234], "to": [736, 151] },
+    { "zone": "Library", "from": [472, 419], "to": [455, 349] },
+    { "zone": "Library", "from": [851, 422], "to": [881, 350] },
+    { "zone": "Work Space", "from": [210, 417], "to": [170, 337] },
+    { "zone": "Work Space", "from": [375, 417], "to": [348, 335] },
+    { "zone": "Work Space", "from": [376, 752], "to": [345, 707] },
+    { "zone": "Art Gallery", "from": [478, 537], "to": [462, 468] },
+    { "zone": "Art Gallery", "from": [695, 537], "to": [706, 468] },
+    { "zone": "Museum", "from": [1006, 631], "to": [1052, 580] },
+    { "zone": "Campus", "from": [482, 838], "to": [466, 810] },
+    { "zone": "Campus", "from": [954, 837], "to": [1004, 814] },
+    { "zone": "Campus", "from": [482, 1094], "to": [466, 1100] }
+  ]
+}

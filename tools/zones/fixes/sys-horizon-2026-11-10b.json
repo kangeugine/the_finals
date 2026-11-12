@@ -1,0 +1,17 @@
+{
+  "map": "SYS-HORIZON.webp",
+  "_note": "Zoomed screenshot without grid labels; calibrated from the Art Gallery/Museum zone corners. Art Gallery's top corners are pinned (from = to) so only its bottom edge moves.",
+  "screen": { "k": 0.4397, "sx0": -414.5, "sy0": 1481.2 },
+  "pairs": [
+    { "zone": "Art Gallery", "from": [113, 113], "to": [113, 113] },
+    { "zone": "Art Gallery", "from": [499, 113], "to": [499, 113] },
+    { "zone": "Art Gallery", "from": [116, 497], "to": [110, 557] },
+    { "zone": "Art Gallery", "from": [499, 497], "to": [494, 561] },
+    { "zone": "Museum", "from": [649, 133], "to": [602, 108] },
+    { "zone": "Museum", "from": [1001, 138], "to": [987, 108] },
+    { "zone": "Museum", "from": [1007, 285], "to": [991, 285] },
+    { "zone": "Museum", "from": [1004, 506], "to": [990, 539] },
+    { "zone": "Museum", "from": [557, 386], "to": [507, 401] },
+    { "zone": "Museum", "from": [557, 435], "to": [507, 455] }
+  ]
+}
